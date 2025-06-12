@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor Zasobów Komputera</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Monitor Zasobów Komputera</h1>
+
+        <div class="monitor-section">
+            <h2>Procesor (CPU)</h2>
+            <div class="monitor-item">
+                <span>Użycie:</span>
+                <span id="cpu-usage">--%</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="cpu-progress"></div>
+            </div>
+            <div class="min-max-values">
+                <span class="min-value">Min: <span id="cpuUsage-min">--%</span></span>
+                <span class="max-value">Max: <span id="cpuUsage-max">--%</span></span>
+            </div>
+
+            <div class="monitor-item">
+                <span>Nazwa procesora:</span>
+                <span id="processor-name">--</span>
+            </div>
+            <div class="monitor-item">
+                <span>Taktowanie:</span>
+                <span id="cpu-clock">-- GHz</span>
+            </div>
+            <div class="min-max-values">
+                <span class="min-value">Min: <span id="cpuClock-min">-- GHz</span></span>
+                <span class="max-value">Max: <span id="cpuClock-max">-- GHz</span></span>
+            </div>
+            <div class="monitor-item">
+                <span>Cache L2:</span>
+                <span id="l2-cache">--</span>
+            </div>
+            <div class="monitor-item">
+                <span>Cache L3:</span>
+                <span id="l3-cache">--</span>
+            </div>
+            <div class="monitor-item">
+                <span>Rdzenie fizyczne:</span>
+                <span id="cores-physical">--</span>
+            </div>
+            <div class="monitor-item">
+                <span>Wątki logiczne:</span>
+                <span id="cores-logical">--</span>
+            </div>
+        </div>
+
+        <div class="monitor-section">
+            <h2>Pamięć RAM</h2>
+            <div class="monitor-item">
+                <span>Użycie:</span>
+                <span id="ram-usage">--%</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="ram-progress"></div>
+            </div>
+            <div class="min-max-values">
+                <span class="min-value">Min: <span id="ramUsage-min">--%</span></span>
+                <span class="max-value">Max: <span id="ramUsage-max">--%</span></span>
+            </div>
+            <div class="monitor-item">
+                <span>Wolne:</span>
+                <span id="ram-free">-- GB</span>
+            </div>
+            <div class="min-max-values">
+                <span class="min-value">Min: <span id="ramFree-min">-- GB</span></span>
+                <span class="max-value">Max: <span id="ramFree-max">-- GB</span></span>
+            </div>
+            <div class="monitor-item">
+                <span>Całkowite:</span>
+                <span id="ram-total">-- GB</span>
+            </div>
+        </div>
+
+        <div class="monitor-section">
+            <h2>Dysk</h2>
+            <div class="monitor-item">
+                <span>Użycie:</span>
+                <span id="disk-usage">--%</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="disk-progress"></div>
+            </div>
+            <div class="min-max-values">
+                <span class="min-value">Min: <span id="diskUsage-min">--%</span></span>
+                <span class="max-value">Max: <span id="diskUsage-max">--%</span></span>
+            </div>
+            <div class="monitor-item">
+                <span>Wolne:</span>
+                <span id="disk-free">-- GB</span>
+            </div>
+            <div class="min-max-values">
+                <span class="min-value">Min: <span id="diskFree-min">-- GB</span></span>
+                <span class="max-value">Max: <span id="diskFree-max">-- GB</span></span>
+            </div>
+            <div class="monitor-item">
+                <span>Całkowite:</span>
+                <span id="disk-total">-- GB</span>
+            </div>
+        </div>
+
+        <div class="monitor-section">
+            <h2>Sieć</h2>
+            <div class="monitor-item">
+                <span>Pobieranie:</span>
+                <span id="net-download">-- KB/s</span>
+            </div>
+            <div class="min-max-values">
+                <span class="min-value">Min: <span id="netDownload-min">-- KB/s</span></span>
+                <span class="max-value">Max: <span id="netDownload-max">-- KB/s</span></span>
+            </div>
+            <div class="monitor-item">
+                <span>Wysyłanie:</span>
+                <span id="net-upload">-- KB/s</span>
+            </div>
+            <div class="min-max-values">
+                <span class="min-value">Min: <span id="netUpload-min">-- KB/s</span></span>
+                <span class="max-value">Max: <span id="netUpload-max">-- KB/s</span></span>
+            </div>
+            <div class="monitor-item">
+                <span>Aktywne połączenia:</span>
+                <span id="net-connections">--</span>
+            </div>
+            <div class="min-max-values">
+                <span class="min-value">Min: <span id="netConnections-min">--</span></span>
+                <span class="max-value">Max: <span id="netConnections-max">--</span></span>
+            </div>
+        </div>
+        <div class="monitor-section" id="gpu-section" style="display: none;">
+            <h2>Karta Graficzna (GPU)</h2>
+            <div id="gpu-details-container">
+                <p>Brak dostępnych danych GPU lub brak kart NVIDIA.</p>
+            </div>
+        </div>
+
+
+        <div class="reset-button-container">
+            <button class="reset-button" id="reset-stats-button">Resetuj statystyki min/max</button>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2025 Monitor Zasobów Komputera. Wszystkie prawa zastrzeżone.</p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

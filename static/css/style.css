@@ -1,0 +1,187 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #0A0A0F; /* Even darker, almost black */
+    color: #C0C0C0; /* Slightly darker light gray for text */
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+/* Kontener główny dla wszystkich sekcji */
+.container {
+    background-color: #1A1A22; /* Very dark gray-blue */
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.8); /* Stronger shadow */
+    width: 90%;
+    max-width: 1200px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+h1 {
+    color: #4A90E2; /* Deep Blue for accent */
+    text-align: center;
+    margin-bottom: 30px;
+    grid-column: 1 / -1;
+}
+
+/* Styl dla pojedynczych sekcji monitorowania (CPU, RAM, Dysk, Sieć) */
+.monitor-section {
+    background-color: #1F2833; /* Darker Slate Gray */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.6); /* Stronger section shadow */
+    transition: transform 0.3s ease-in-out;
+}
+
+.monitor-section:hover {
+    transform: translateY(-5px);
+}
+
+.monitor-section h2 {
+    color: #6DAFFD; /* Lighter Deep Blue */
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.5em;
+    text-align: center;
+}
+
+.monitor-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #3A4750; /* Darker gray-blue for separator */
+}
+
+.monitor-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.monitor-item span:first-child {
+    font-weight: bold;
+    color: #9AA7B6; /* Muted gray */
+}
+
+.monitor-item span:last-child {
+    color: #E0E0E0; /* Light gray */
+    font-size: 1.1em;
+}
+
+/* Style dla min/max wartości */
+.min-max-values {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9em;
+    color: #7A8B99; /* Darker muted gray */
+    margin-top: -5px;
+    margin-bottom: 10px;
+    padding-top: 5px;
+    border-top: 1px dashed #3A4750; /* Darker gray-blue */
+}
+.min-max-values span {
+    display: block;
+    text-align: center;
+    flex-grow: 1;
+}
+.min-max-values .min-value {
+    color: #38C768; /* Slightly deeper green */
+}
+.min-max-values .max-value {
+    color: #F06161; /* Slightly deeper red */
+}
+
+
+/* Paski postępu */
+.progress-bar-container {
+    background-color: #3A4750; /* Darker gray-blue */
+    border-radius: 5px;
+    height: 15px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background-color: #4A90E2; /* Deep Blue for progress bar */
+    width: 0%;
+    border-radius: 5px;
+    transition: width 0.5s ease-out;
+}
+
+/* Różne kolory dla pasków w zależności od zużycia (opcjonalnie, do zaimplementowania w JS) */
+.progress-bar.yellow { background-color: #DDAA00; } /* Deeper yellow */
+.progress-bar.red { background-color: #CC3333; }    /* Deeper red */
+
+/* Stopka */
+.footer {
+    grid-column: 1 / -1;
+    text-align: center;
+    margin-top: 30px;
+    font-size: 0.9em;
+    color: #7A8B99; /* Darker muted gray */
+}
+
+/* Przycisk resetowania */
+.reset-button-container {
+    grid-column: 1 / -1;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.reset-button {
+    background-color: #4A90E2; /* Deep Blue */
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.reset-button:hover {
+    background-color: #6DAFFD; /* Lighter Deep Blue on hover */
+}
+/* Media queries dla mniejszych ekranów */
+@media (max-width: 768px) {
+    .container {
+        grid-template-columns: 1fr;
+        padding: 20px;
+    }
+
+    h1 {
+        font-size: 1.8em;
+    }
+
+    .monitor-section {
+        padding: 15px;
+    }
+}
+
+/* Nowa klasa dla podsekcji (np. dla każdego GPU) */
+.monitor-subsection {
+    background-color: #283742; /* Slightly lighter shade of Darker Slate Gray */
+    padding: 15px;
+    border-radius: 6px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.monitor-subsection h3 {
+    color: #A0AEC0; /* Muted gray for GPU sub-heading */
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.3em;
+    text-align: center;
+    border-bottom: 1px solid #3A4750; /* Darker gray-blue for separator */
+    padding-bottom: 8px;
+}
