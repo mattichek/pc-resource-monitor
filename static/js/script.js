@@ -7,12 +7,11 @@ let monitorStats = {
     // Ważne: klucze tutaj muszą odpowiadać kluczom zwracanym przez API Flaska
     cpu_usage: { min: Infinity, max: -Infinity, unit: '%', decimals: 0, idPrefix: 'cpuUsage' },
     cpu_clock: { min: Infinity, max: -Infinity, unit: ' GHz', decimals: 2, idPrefix: 'cpuClock' },
-    // Nowe statystyki CPU
-    processor_name: { min: Infinity, max: -Infinity, unit: '', decimals: 0, idPrefix: 'processorName', skipMinMax: true }, // Bez min/max
-    l2_cache: { min: Infinity, max: -Infinity, unit: '', decimals: 0, idPrefix: 'l2Cache', skipMinMax: true }, // Bez min/max
-    l3_cache: { min: Infinity, max: -Infinity, unit: '', decimals: 0, idPrefix: 'l3Cache', skipMinMax: true }, // Bez min/max
-    cores_physical: { min: Infinity, max: -Infinity, unit: '', decimals: 0, idPrefix: 'coresPhysical', skipMinMax: true }, // Bez min/max
-    cores_logical: { min: Infinity, max: -Infinity, unit: '', decimals: 0, idPrefix: 'coresLogical', skipMinMax: true }, // Bez min/max
+    processor_name: { min: Infinity, max: -Infinity, unit: '', decimals: 0, idPrefix: 'processorName', skipMinMax: true },
+    l2_cache: { min: Infinity, max: -Infinity, unit: '', decimals: 0, idPrefix: 'l2Cache', skipMinMax: true },
+    l3_cache: { min: Infinity, max: -Infinity, unit: '', decimals: 0, idPrefix: 'l3Cache', skipMinMax: true },
+    cores_physical: { min: Infinity, max: -Infinity, unit: '', decimals: 0, idPrefix: 'coresPhysical', skipMinMax: true },
+    cores_logical: { min: Infinity, max: -Infinity, unit: '', decimals: 0, idPrefix: 'coresLogical', skipMinMax: true },
 
     ram_usage: { min: Infinity, max: -Infinity, unit: '%', decimals: 0, idPrefix: 'ramUsage' },
     ram_free: { min: Infinity, max: -Infinity, unit: ' GB', decimals: 2, idPrefix: 'ramFree' },
@@ -25,14 +24,13 @@ let monitorStats = {
 
 // Funkcja do aktualizacji wartości min/max
 function updateMinMax(statKey, currentValue) {
-    // Sprawdź, czy klucz statystyki istnieje w monitorStats
     if (!monitorStats[statKey]) {
         console.warn(`Statystyka o kluczu "${statKey}" nie istnieje w monitorStats.`);
         return;
     }
 
     const stat = monitorStats[statKey];
-    if (stat.skipMinMax) { // Jeśli ta statystyka ma pomijać aktualizację min/max
+    if (stat.skipMinMax) {
         return;
     }
 
@@ -41,20 +39,17 @@ function updateMinMax(statKey, currentValue) {
     const minElement = document.getElementById(`${elementIdPrefix}-min`);
     const maxElement = document.getElementById(`${elementIdPrefix}-max`);
 
-    // Jeśli wartość jest NaN (np. z "N/A"), ustaw "--" i wyjdź
     if (isNaN(value)) {
         if (minElement) minElement.textContent = `--${stat.unit}`;
         if (maxElement) maxElement.textContent = `--${stat.unit}`;
         return;
     }
 
-    // Aktualizuj min
     if (value < stat.min) {
         stat.min = value;
         if (minElement) minElement.textContent = `${value.toFixed(stat.decimals)}${stat.unit}`;
     }
 
-    // Aktualizuj max
     if (value > stat.max) {
         stat.max = value;
         if (maxElement) maxElement.textContent = `${value.toFixed(stat.decimals)}${stat.unit}`;
@@ -66,21 +61,35 @@ function resetMinMaxStats() {
     for (const key in monitorStats) {
         if (monitorStats.hasOwnProperty(key)) {
             const stat = monitorStats[key];
-            if (stat.skipMinMax) continue; // Pomiń statystyki, które nie mają min/max
+            if (stat.skipMinMax) continue;
 
             stat.min = Infinity;
             stat.max = -Infinity;
             const elementIdPrefix = stat.idPrefix;
             const minElement = document.getElementById(`${elementIdPrefix}-min`);
             const maxElement = document.getElementById(`${elementIdPrefix}-max`);
-            // Upewnij się, że jednostka jest wyświetlana nawet jeśli wartość to "--"
             if (minElement) minElement.textContent = `--${stat.unit}`;
             if (maxElement) maxElement.textContent = `--${stat.unit}`;
         }
     }
     // Specjalne czyszczenie dla GPU, ponieważ ich klucze są dynamiczne
-    document.querySelectorAll('[id^="gpu-"][id$="-min"]').forEach(el => el.textContent = `--${monitorStats[el.id.replace('-min', '')]?.unit || ''}`);
-    document.querySelectorAll('[id^="gpu-"][id$="-max"]').forEach(el => el.textContent = `--${monitorStats[el.id.replace('-max', '')]?.unit || ''}`);
+    // To jest nadal potrzebne, aby wyczyścić wyświetlane wartości,
+    // ponieważ monitorStats może zawierać klucze dla GPU, które już nie są obecne w nowym cyklu pobierania danych.
+    document.querySelectorAll('[id^="gpu-"][id$="-min"]').forEach(el => {
+        // Spróbuj odgadnąć jednostkę na podstawie ID
+        let unit = '';
+        if (el.id.includes('load')) unit = '%';
+        else if (el.id.includes('memoryUsed')) unit = ' GB';
+        else if (el.id.includes('temperature')) unit = ' °C';
+        el.textContent = `--${unit}`;
+    });
+    document.querySelectorAll('[id^="gpu-"][id$="-max"]').forEach(el => {
+        let unit = '';
+        if (el.id.includes('load')) unit = '%';
+        else if (el.id.includes('memoryUsed')) unit = ' GB';
+        else if (el.id.includes('temperature')) unit = ' °C';
+        el.textContent = `--${unit}`;
+    });
 }
 
 // Funkcja do pobierania danych z API i renderowania
@@ -97,28 +106,25 @@ async function fetchStatsAndRender() {
         document.getElementById('cpu-usage').textContent = `${data.cpu_usage}%`;
         const cpuProgress = document.getElementById('cpu-progress');
         cpuProgress.style.width = `${data.cpu_usage}%`;
-        cpuProgress.className = 'progress-bar'; // Resetuje klasy
+        cpuProgress.className = 'progress-bar';
         if (data.cpu_usage > 80) cpuProgress.classList.add('red');
         else if (data.cpu_usage > 50) cpuProgress.classList.add('yellow');
         updateMinMax('cpu_usage', data.cpu_usage);
 
-        // Taktowanie CPU
         document.getElementById('cpu-clock').textContent = `${data.cpu_clock} GHz`;
         updateMinMax('cpu_clock', data.cpu_clock);
 
-        // Nowe dane CPU
         document.getElementById('processor-name').textContent = data.processor_name;
         document.getElementById('l2-cache').textContent = data.l2_cache;
         document.getElementById('l3-cache').textContent = data.l3_cache;
         document.getElementById('cores-physical').textContent = data.cores_physical;
         document.getElementById('cores-logical').textContent = data.cores_logical;
 
-
         // Aktualizacja RAM
         document.getElementById('ram-usage').textContent = `${data.ram_usage}%`;
         const ramProgress = document.getElementById('ram-progress');
         ramProgress.style.width = `${data.ram_usage}%`;
-        ramProgress.className = 'progress-bar'; // Resetuje klasy
+        ramProgress.className = 'progress-bar';
         if (data.ram_usage > 85) ramProgress.classList.add('red');
         else if (data.ram_usage > 60) ramProgress.classList.add('yellow');
         updateMinMax('ram_usage', data.ram_usage);
@@ -131,7 +137,7 @@ async function fetchStatsAndRender() {
         document.getElementById('disk-usage').textContent = `${data.disk_usage}%`;
         const diskProgress = document.getElementById('disk-progress');
         diskProgress.style.width = `${data.disk_usage}%`;
-        diskProgress.className = 'progress-bar'; // Resetuje klasy
+        diskProgress.className = 'progress-bar';
         if (data.disk_usage > 90) diskProgress.classList.add('red');
         else if (data.disk_usage > 70) diskProgress.classList.add('yellow');
         updateMinMax('disk_usage', data.disk_usage);
@@ -155,12 +161,36 @@ async function fetchStatsAndRender() {
         const gpuDetailsContainer = document.getElementById('gpu-details-container');
         gpuDetailsContainer.innerHTML = ''; // Wyczyść poprzednie dane
 
-        if (data.gpu_stats && data.gpu_stats.length > 0) {
-            gpuSection.style.display = 'block'; // Pokaż sekcję GPU
-            data.gpu_stats.forEach((gpu, index) => {
-                const gpuId = `gpu-${index}`; // Unikalne ID dla każdego GPU
+        // Tymczasowy obiekt do przechowywania kluczy GPU z bieżącego cyklu
+        // Pozwoli to usunąć stare klucze GPU z monitorStats, jeśli karta zostanie odłączona
+        const currentGpuKeys = new Set();
 
-                // HTML dla pojedynczego GPU, naśladujący strukturę 'monitor-section'
+        if (data.gpu_stats && data.gpu_stats.length > 0) {
+            gpuSection.style.display = 'block';
+            data.gpu_stats.forEach((gpu, index) => {
+                const gpuId = `gpu-${index}`;
+
+                // Dodanie/aktualizacja definicji statystyk min/max dla GPU w monitorStats
+                // Sprawdź, czy statystyka już istnieje, jeśli nie, zainicjuj ją
+                const gpuLoadKey = `${gpuId}-load`;
+                const gpuMemoryUsedKey = `${gpuId}-memoryUsed`;
+                const gpuTemperatureKey = `${gpuId}-temperature`;
+
+                if (!monitorStats[gpuLoadKey]) {
+                    monitorStats[gpuLoadKey] = { min: Infinity, max: -Infinity, unit: '%', decimals: 0, idPrefix: gpuLoadKey };
+                }
+                if (!monitorStats[gpuMemoryUsedKey]) {
+                    monitorStats[gpuMemoryUsedKey] = { min: Infinity, max: -Infinity, unit: ' GB', decimals: 2, idPrefix: gpuMemoryUsedKey };
+                }
+                if (!monitorStats[gpuTemperatureKey]) {
+                    monitorStats[gpuTemperatureKey] = { min: Infinity, max: -Infinity, unit: ' °C', decimals: 0, idPrefix: gpuTemperatureKey };
+                }
+
+                // Dodaj klucze do zestawu bieżących kluczy GPU
+                currentGpuKeys.add(gpuLoadKey);
+                currentGpuKeys.add(gpuMemoryUsedKey);
+                currentGpuKeys.add(gpuTemperatureKey);
+
                 const gpuHtml = `
                     <div class="monitor-subsection"> <h3>${gpu.name} (ID: ${gpu.id})</h3>
 
@@ -172,8 +202,8 @@ async function fetchStatsAndRender() {
                             <div class="progress-bar" id="${gpuId}-progress-load"></div>
                         </div>
                         <div class="min-max-values">
-                            <span class="min-value">Min: <span id="${gpuId}-load-min">--%</span></span>
-                            <span class="max-value">Max: <span id="${gpuId}-load-max">--%</span></span>
+                            <span class="min-value">Min: <span id="${gpuId}-load-min">${monitorStats[gpuLoadKey].min === Infinity ? '--' : monitorStats[gpuLoadKey].min.toFixed(monitorStats[gpuLoadKey].decimals)}${monitorStats[gpuLoadKey].unit}</span></span>
+                            <span class="max-value">Max: <span id="${gpuId}-load-max">${monitorStats[gpuLoadKey].max === -Infinity ? '--' : monitorStats[gpuLoadKey].max.toFixed(monitorStats[gpuLoadKey].decimals)}${monitorStats[gpuLoadKey].unit}</span></span>
                         </div>
 
                         <div class="monitor-item">
@@ -184,8 +214,8 @@ async function fetchStatsAndRender() {
                             <div class="progress-bar" id="${gpuId}-progress-memory"></div>
                         </div>
                         <div class="min-max-values">
-                            <span class="min-value">Min: <span id="${gpuId}-memoryUsed-min">-- GB</span></span>
-                            <span class="max-value">Max: <span id="${gpuId}-memoryUsed-max">-- GB</span></span>
+                            <span class="min-value">Min: <span id="${gpuId}-memoryUsed-min">${monitorStats[gpuMemoryUsedKey].min === Infinity ? '--' : monitorStats[gpuMemoryUsedKey].min.toFixed(monitorStats[gpuMemoryUsedKey].decimals)}${monitorStats[gpuMemoryUsedKey].unit}</span></span>
+                            <span class="max-value">Max: <span id="${gpuId}-memoryUsed-max">${monitorStats[gpuMemoryUsedKey].max === -Infinity ? '--' : monitorStats[gpuMemoryUsedKey].max.toFixed(monitorStats[gpuMemoryUsedKey].decimals)}${monitorStats[gpuMemoryUsedKey].unit}</span></span>
                         </div>
 
                         <div class="monitor-item">
@@ -202,14 +232,14 @@ async function fetchStatsAndRender() {
                             <span id="${gpuId}-temperature">${gpu.temperature} °C</span>
                         </div>
                         <div class="min-max-values">
-                            <span class="min-value">Min: <span id="${gpuId}-temperature-min">-- °C</span></span>
-                            <span class="max-value">Max: <span id="${gpuId}-temperature-max">-- °C</span></span>
+                            <span class="min-value">Min: <span id="${gpuId}-temperature-min">${monitorStats[gpuTemperatureKey].min === Infinity ? '--' : monitorStats[gpuTemperatureKey].min.toFixed(monitorStats[gpuTemperatureKey].decimals)}${monitorStats[gpuTemperatureKey].unit}</span></span>
+                            <span class="max-value">Max: <span id="${gpuId}-temperature-max">${monitorStats[gpuTemperatureKey].max === -Infinity ? '--' : monitorStats[gpuTemperatureKey].max.toFixed(monitorStats[gpuTemperatureKey].decimals)}${monitorStats[gpuTemperatureKey].unit}</span></span>
                         </div>
                     </div>
                 `;
                 gpuDetailsContainer.insertAdjacentHTML('beforeend', gpuHtml);
 
-                // Aktualizacja paska postępu obciążenia GPU
+
                 const gpuLoadProgress = document.getElementById(`${gpuId}-progress-load`);
                 if (gpuLoadProgress) {
                     gpuLoadProgress.style.width = `${gpu.load}%`;
@@ -218,9 +248,8 @@ async function fetchStatsAndRender() {
                     else if (gpu.load > 50) gpuLoadProgress.classList.add('yellow');
                 }
 
-                // Aktualizacja paska postępu użycia pamięci GPU
                 const gpuMemoryProgress = document.getElementById(`${gpuId}-progress-memory`);
-                if (gpuMemoryProgress && gpu.memoryTotal > 0) { // Upewnij się, że memoryTotal nie jest 0
+                if (gpuMemoryProgress && gpu.memoryTotal > 0) {
                     const memoryUsagePercent = (gpu.memoryUsed / gpu.memoryTotal * 100).toFixed(0);
                     gpuMemoryProgress.style.width = `${memoryUsagePercent}%`;
                     gpuMemoryProgress.className = 'progress-bar';
@@ -228,32 +257,35 @@ async function fetchStatsAndRender() {
                     else if (memoryUsagePercent > 60) gpuMemoryProgress.classList.add('yellow');
                 }
 
-                // Dodanie/aktualizacja statystyk min/max
-                if (!monitorStats[`${gpuId}-load`]) {
-                    monitorStats[`${gpuId}-load`] = { min: Infinity, max: -Infinity, unit: '%', decimals: 0, idPrefix: `${gpuId}-load` };
-                }
-                if (!monitorStats[`${gpuId}-memoryUsed`]) {
-                    monitorStats[`${gpuId}-memoryUsed`] = { min: Infinity, max: -Infinity, unit: ' GB', decimals: 2, idPrefix: `${gpuId}-memoryUsed` };
-                }
-                if (!monitorStats[`${gpuId}-temperature`]) {
-                    monitorStats[`${gpuId}-temperature`] = { min: Infinity, max: -Infinity, unit: ' °C', decimals: 0, idPrefix: `${gpuId}-temperature` };
-                }
-
-                updateMinMax(`${gpuId}-load`, gpu.load);
-                updateMinMax(`${gpuId}-memoryUsed`, gpu.memoryUsed);
-                updateMinMax(`${gpuId}-temperature`, gpu.temperature);
+                // Aktualizacja min/max po renderowaniu HTML
+                updateMinMax(gpuLoadKey, gpu.load);
+                updateMinMax(gpuMemoryUsedKey, gpu.memoryUsed);
+                updateMinMax(gpuTemperatureKey, gpu.temperature);
             });
+
+            // Usuń z monitorStats klucze GPU, które nie są już aktywne
+            for (const key in monitorStats) {
+                if (monitorStats.hasOwnProperty(key) && key.startsWith('gpu-') && !currentGpuKeys.has(key)) {
+                    delete monitorStats[key];
+                }
+            }
+
         } else {
-            gpuSection.style.display = 'none'; // Ukryj sekcję, jeśli brak GPU
+            gpuSection.style.display = 'none';
             gpuDetailsContainer.innerHTML = '<p>Brak dostępnych danych GPU lub brak kart NVIDIA.</p>';
+            // Jeśli nie ma GPU, upewnij się, że stare statystyki GPU są usunięte z monitorStats
+            for (const key in monitorStats) {
+                if (monitorStats.hasOwnProperty(key) && key.startsWith('gpu-')) {
+                    delete monitorStats[key];
+                }
+            }
         }
 
     } catch (error) {
         console.error('Błąd podczas pobierania danych lub renderowania:', error);
-        // W przypadku błędu ustawiamy stan na "Błąd!" dla wszystkich pól
         const elementsToReset = [
             'cpu-usage', 'cpu-clock',
-            'processor-name', 'l2-cache', 'l3-cache', 'cores-physical', 'cores-logical', // Nowe elementy CPU
+            'processor-name', 'l2-cache', 'l3-cache', 'cores-physical', 'cores-logical',
             'ram-usage', 'ram-free', 'ram-total',
             'disk-usage', 'disk-free', 'disk-total',
             'net-download', 'net-upload', 'net-connections'
@@ -265,7 +297,6 @@ async function fetchStatsAndRender() {
             }
         });
 
-        // Reset pasków postępu i ich klas
         const progressBars = ['cpu-progress', 'ram-progress', 'disk-progress'];
         progressBars.forEach(id => {
             const bar = document.getElementById(id);
@@ -275,13 +306,12 @@ async function fetchStatsAndRender() {
             }
         });
 
-        // Ustawienie min/max na --
-        resetMinMaxStats(); // Wywołaj reset Min/Max statystyk
+        resetMinMaxStats();
     }
 }
 
 // Uruchomienie cyklicznego pobierania danych
-setInterval(fetchStatsAndRender, 3000); // Co 3 sekundy
+setInterval(fetchStatsAndRender, 1000);
 
 // Pierwsze pobranie danych po załadowaniu strony
 document.addEventListener('DOMContentLoaded', () => {
