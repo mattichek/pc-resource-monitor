@@ -11,7 +11,7 @@
     <div class="container-charts">
         <h1>Monitor Zasobów Komputera - Wykresy</h1>
 
-        <div class="chart-grid">
+        <div class="chart-grid" id="main-chart-grid">
             <div class="chart-card">
                 <h2>Użycie Procesora (CPU)</h2>
                 <div class="chart-container-large">
@@ -74,11 +74,8 @@
                     <canvas id="netConnectionsChart"></canvas>
                 </div>
             </div>
-
-            <div id="gpu-charts-container">
-                <p class="no-gpu-message">Brak dostępnych danych GPU lub brak kart NVIDIA.</p>
+            
             </div>
-        </div>
 
         <div class="button-row">
             <button class="back-button" onclick="location.href='/'">Powrót do Monitora</button>

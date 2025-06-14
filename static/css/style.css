@@ -201,6 +201,14 @@ h1 {
     color: #E0E0E0;
 }
 
+/* Dodano styl dla kart wykresów GPU */
+.gpu-chart-card {
+    /* Domyślnie dziedziczy style z .chart-card */
+    /* Możesz dodać tutaj specyficzne style dla kart GPU, jeśli potrzebujesz */
+    /* Np. border: 2px solid #FF5722; */
+}
+
+
 .chart-card h2 {
     color: #4A90E2;
     margin-top: 0;
