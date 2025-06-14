@@ -1,3 +1,4 @@
+# app.py
 import psutil
 from flask import Flask, render_template, jsonify
 from flask_cors import CORS
@@ -32,24 +33,22 @@ def get_system_stats():
     l3_cache = "N/A"
     cores_physical = "N/A"
     cores_logical = "N/A"
-
     try:
         info = cpuinfo.get_cpu_info()
-        processor_name = info.get('brand_raw', 'Nieznany procesor')
-        l2_cache_size = info.get('l2_cache_size')
-        l3_cache_size = info.get('l3_cache_size')
-
-        if l2_cache_size is not None:
-            l2_cache = f"{l2_cache_size / (1024*1024):.0f} MB"
-        if l3_cache_size is not None:
-            l3_cache = f"{l3_cache_size / (1024*1024):.0f} MB"
+        processor_name = info.get('brand_raw', 'N/A')
+        # psutil nie zawsze podaje te dane bezpośrednio, więc próbujemy z cpuinfo
+        l2_cache = info.get('l2_cache_size', 'N/A')
+        if l2_cache != 'N/A' and l2_cache is not None:
+             l2_cache = f"{round(l2_cache / (1024 * 1024), 2)} MB" # Konwersja na MB
+        l3_cache = info.get('l3_cache_size', 'N/A')
+        if l3_cache != 'N/A' and l3_cache is not None:
+            l3_cache = f"{round(l3_cache / (1024 * 1024), 2)} MB" # Konwersja na MB
 
         cores_physical = psutil.cpu_count(logical=False)
         cores_logical = psutil.cpu_count(logical=True)
 
     except Exception as e:
-        print(f"Błąd podczas pobierania danych CPU z cpuinfo/psutil: {e}")
-
+        print(f"Błąd podczas zbierania informacji o CPU: {e}")
 
     # RAM
     ram = psutil.virtual_memory()
@@ -57,44 +56,30 @@ def get_system_stats():
     ram_total_gb = round(ram.total / (1024**3), 2)
     ram_free_gb = round(ram.available / (1024**3), 2)
 
-    # Disk
-    disk_usage_percent = "N/A"
-    disk_total_gb = "N/A"
-    disk_free_gb = "N/A"
-    try:
-        # Próbujemy 'C:\' dla Windows, inaczej '/' dla Linux/macOS
-        # Jeśli masz wiele partycji, możesz dodać logikę do wyboru konkretnej
-        disk_usage = psutil.disk_usage('C:\\' if psutil.WINDOWS else '/')
-        disk_usage_percent = disk_usage.percent
-        disk_total_gb = round(disk_usage.total / (1024**3), 2)
-        disk_free_gb = round(disk_usage.free / (1024**3), 2)
-    except Exception as e:
-        print(f"Błąd podczas pobierania danych dysku: {e}")
+    # Dysk
+    disk = psutil.disk_usage('/') # 'C:\\' na Windows, '/' na Linux/macOS
+    disk_usage_percent = disk.percent
+    disk_total_gb = round(disk.total / (1024**3), 2)
+    disk_free_gb = round(disk.free / (1024**3), 2)
 
-
-    # Network (wymaga dwóch odczytów, aby obliczyć prędkość)
-    current_net_io_counters = psutil.net_io_counters()
-    current_net_io_time = time.time()
-
-    net_upload_kbs = 0
+    # Sieć
+    net_io_new = psutil.net_io_counters()
     net_download_kbs = 0
-
-    if last_net_io_counters is not None and last_net_io_time is not None:
-        time_diff = current_net_io_time - last_net_io_time
+    net_upload_kbs = 0
+    if last_net_io_counters and last_net_io_time:
+        time_diff = time.time() - last_net_io_time
         if time_diff > 0:
-            bytes_sent_diff = current_net_io_counters.bytes_sent - last_net_io_counters.bytes_sent
-            bytes_recv_diff = current_net_io_counters.bytes_recv - last_net_io_counters.bytes_recv
+            # Różnica w bajtach, konwersja na KB/s
+            net_download_kbs = round((net_io_new.bytes_recv - last_net_io_counters.bytes_recv) / 1024 / time_diff, 0)
+            net_upload_kbs = round((net_io_new.bytes_sent - last_net_io_counters.bytes_sent) / 1024 / time_diff, 0)
 
-            net_upload_kbs = round((bytes_sent_diff / 1024) / time_diff, 0) # KB/s
-            net_download_kbs = round((bytes_recv_diff / 1024) / time_diff, 0) # KB/s
-
-    last_net_io_counters = current_net_io_counters
-    last_net_io_time = current_net_io_time
+    last_net_io_counters = net_io_new
+    last_net_io_time = time.time()
 
     # Aktywne połączenia sieciowe
-    net_connections = len(psutil.net_connections(kind='inet'))
+    net_connections = len(psutil.net_connections(kind='inet')) # Tylko połączenia internetowe
 
-    # GPU
+    # GPU (tylko NVIDIA z GPUtil)
     gpu_stats = []
     try:
         gpus = GPUtil.getGPUs()
@@ -102,11 +87,11 @@ def get_system_stats():
             gpu_stats.append({
                 "id": gpu.id,
                 "name": gpu.name,
-                "load": round(gpu.load * 100, 0), # Obciążenie w %
-                "memoryTotal": round(gpu.memoryTotal / 1024, 2), # Konwertuj na GB
-                "memoryUsed": round(gpu.memoryUsed / 1024, 2),   # Konwertuj na GB
-                "memoryFree": round(gpu.memoryFree / 1024, 2),   # Konwertuj na GB
-                "temperature": round(gpu.temperature, 0) # Temperatura w °C
+                "load": round(gpu.load * 100, 2), # Obciążenie w %
+                "memoryUsed": round(gpu.memoryUsed / 1024, 2), # Pamięć w GB
+                "memoryTotal": round(gpu.memoryTotal / 1024, 2), # Pamięć w GB
+                "memoryFree": round(gpu.memoryFree / 1024, 2),   # Pamięć w GB
+                "temperature": gpu.temperature # Temperatura w °C
             })
     except Exception as e:
         print(f"Błąd podczas pobierania danych GPU: {e}. Upewnij się, że masz sterowniki NVIDIA i narzędzie nvidia-smi zainstalowane i działające.")
@@ -139,12 +124,16 @@ def get_system_stats():
 def index():
     return render_template('index.html')
 
-# Endpoint API do pobierania danych o zasobach
+# NOWY ENDPOINT DLA WYKRESÓW
+@app.route('/charts')
+def charts():
+    return render_template('charts.html')
+
+# Endpoint API (zwraca dane JSON)
 @app.route('/api/stats')
-def get_stats():
+def api_stats():
     stats = get_system_stats()
     return jsonify(stats)
 
 if __name__ == '__main__':
-    psutil.cpu_percent(interval=None)
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(debug=True)

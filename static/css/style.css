@@ -169,19 +169,135 @@ h1 {
 }
 
 /* Nowa klasa dla podsekcji (np. dla każdego GPU) */
-.monitor-subsection {
-    background-color: #283742; /* Slightly lighter shade of Darker Slate Gray */
-    padding: 15px;
-    border-radius: 6px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+.container-charts {
+    background-color: #1A1A22;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.8);
+    width: 90%;
+    max-width: 1400px; /* Szerszy kontener dla wykresów */
+    margin: 20px auto; /* Centrowanie kontenera */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-.monitor-subsection h3 {
-    color: #A0AEC0; /* Muted gray for GPU sub-heading */
+.chart-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); /* Większe kolumny dla wykresów */
+    gap: 25px;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.chart-card {
+    background-color: #2D3A47;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #E0E0E0;
+}
+
+.chart-card h2 {
+    color: #4A90E2;
     margin-top: 0;
     margin-bottom: 15px;
     font-size: 1.3em;
+}
+
+.chart-container-large {
+    position: relative;
+    height: 250px; /* Jeszcze większa wysokość dla wykresów */
+    width: 100%;
+}
+
+/* Dostosowanie canvasa dla obu widoków */
+canvas {
+    background-color: #222B34; /* Ciemniejsze tło dla canvasa */
+    border-radius: 5px;
+}
+
+.button-row {
+    margin-top: 30px;
+    display: flex;
+    gap: 20px;
+}
+
+.back-button {
+    background-color: #7A8B99; /* Szary */
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.back-button:hover {
+    background-color: #90A4AE; /* Jaśniejszy szary */
+}
+
+/* Styl dla komunikatu o braku GPU na stronie wykresów */
+.no-gpu-message {
     text-align: center;
-    border-bottom: 1px solid #3A4750; /* Darker gray-blue for separator */
-    padding-bottom: 8px;
+    color: #7A8B99;
+    grid-column: 1 / -1; /* Rozciągnij na całą szerokość siatki */
+    padding: 20px;
+}
+
+
+/* ... (istniejące style dla .reset-button i media queries) ... */
+
+/* Przycisk resetowania */
+.reset-button-container {
+    grid-column: 1 / -1;
+    text-align: center;
+    margin-top: 20px;
+    display: flex; /* Użyj flexboxa do wyrównania przycisków */
+    justify-content: center; /* Wyśrodkuj przyciski */
+    gap: 15px; /* Dodaj odstęp między przyciskami */
+}
+
+.reset-button {
+    background-color: #4A90E2; /* Deep Blue */
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.reset-button:hover {
+    background-color: #6DAFFD; /* Lighter Deep Blue on hover */
+}
+/* Media queries dla mniejszych ekranów */
+@media (max-width: 768px) {
+    .container {
+        grid-template-columns: 1fr;
+        padding: 20px;
+    }
+
+    h1 {
+        font-size: 1.8em;
+    }
+     .chart-grid {
+        grid-template-columns: 1fr;
+    }
+    .chart-container-large {
+        height: 200px;
+    }
+    .button-row {
+        flex-direction: column; /* Przyciski jeden pod drugim na małych ekranach */
+        gap: 10px;
+    }
+     .reset-button-container { /* Zastosuj do obu widoków */
+        flex-direction: column;
+        gap: 10px;
+    }
 }

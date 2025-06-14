@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor Zasobów Komputera - Wykresy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container-charts">
+        <h1>Monitor Zasobów Komputera - Wykresy</h1>
+
+        <div class="chart-grid">
+            <div class="chart-card">
+                <h2>Użycie Procesora (CPU)</h2>
+                <div class="chart-container-large">
+                    <canvas id="cpuUsageChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h2>Taktowanie Procesora (CPU)</h2>
+                <div class="chart-container-large">
+                    <canvas id="cpuClockChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h2>Użycie Pamięci RAM</h2>
+                <div class="chart-container-large">
+                    <canvas id="ramUsageChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h2>Wolna Pamięć RAM</h2>
+                <div class="chart-container-large">
+                    <canvas id="ramFreeChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h2>Użycie Dysku</h2>
+                <div class="chart-container-large">
+                    <canvas id="diskUsageChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h2>Wolne Miejsce na Dysku</h2>
+                <div class="chart-container-large">
+                    <canvas id="diskFreeChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h2>Pobieranie Sieci</h2>
+                <div class="chart-container-large">
+                    <canvas id="netDownloadChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h2>Wysyłanie Sieci</h2>
+                <div class="chart-container-large">
+                    <canvas id="netUploadChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h2>Aktywne Połączenia Sieciowe</h2>
+                <div class="chart-container-large">
+                    <canvas id="netConnectionsChart"></canvas>
+                </div>
+            </div>
+
+            <div id="gpu-charts-container">
+                <p class="no-gpu-message">Brak dostępnych danych GPU lub brak kart NVIDIA.</p>
+            </div>
+        </div>
+
+        <div class="button-row">
+            <button class="back-button" onclick="location.href='/'">Powrót do Monitora</button>
+            <button class="reset-button" id="reset-stats-button-charts">Resetuj wykresy</button>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2025 Monitor Zasobów Komputera. Wszystkie prawa zastrzeżone.</p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/charts-script.js') }}"></script>
+</body>
+</html>

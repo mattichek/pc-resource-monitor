@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitor Zasobów Komputera</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
@@ -23,7 +24,6 @@
                 <span class="min-value">Min: <span id="cpuUsage-min">--%</span></span>
                 <span class="max-value">Max: <span id="cpuUsage-max">--%</span></span>
             </div>
-
             <div class="monitor-item">
                 <span>Nazwa procesora:</span>
                 <span id="processor-name">--</span>
@@ -134,7 +134,7 @@
                 <span class="min-value">Min: <span id="netConnections-min">--</span></span>
                 <span class="max-value">Max: <span id="netConnections-max">--</span></span>
             </div>
-        </div>
+             </div>
         <div class="monitor-section" id="gpu-section" style="display: none;">
             <h2>Karta Graficzna (GPU)</h2>
             <div id="gpu-details-container">
@@ -142,9 +142,9 @@
             </div>
         </div>
 
-
         <div class="reset-button-container">
             <button class="reset-button" id="reset-stats-button">Resetuj statystyki min/max</button>
+            <button class="reset-button" onclick="location.href='/charts'">Pokaż wykresy</button>
         </div>
 
         <div class="footer">
