@@ -1,5 +1,5 @@
 // script.js
-const API_URL = 'http://127.0.0.1:5000/api/stats';
+const API_URL = '/api/stats';
 
 // Obiekt do przechowywania najniższych i najwyższych wartości
 // oraz konfiguracji formatowania dla każdej statystyki
@@ -21,7 +21,7 @@ let monitorStats = {
     net_upload: { min: Infinity, max: -Infinity, unit: ' KB/s', decimals: 0, idPrefix: 'netUpload' },
     net_connections: { min: Infinity, max: -Infinity, unit: '', decimals: 0, idPrefix: 'netConnections' }
 };
-
+let statsInterval;
 // Funkcja do aktualizacji wartości min/max
 function updateMinMax(statKey, currentValue) {
     if (!monitorStats[statKey]) {
@@ -304,14 +304,13 @@ async function fetchStatsAndRender() {
 }
 
 // Uruchomienie cyklicznego pobierania danych
-setInterval(fetchStatsAndRender, 1000);
-
-// Pierwsze pobranie danych po załadowaniu strony
 document.addEventListener('DOMContentLoaded', () => {
-    // Resetuj wartości min/max tylko raz przy załadowaniu strony
     resetMinMaxStats();
     fetchStatsAndRender();
-});
 
+    if (!statsInterval) {
+        statsInterval = setInterval(fetchStatsAndRender, 1000);
+    }
+});
 // Obsługa przycisku resetowania
 document.getElementById('reset-stats-button').addEventListener('click', resetMinMaxStats);

@@ -1,6 +1,6 @@
 // charts-script.js
 // URL do API, z którego pobierane są statystyki
-const API_URL = 'http://127.0.0.1:5000/api/stats';
+const API_URL = '/api/stats';
 
 // Obiekt monitorStats przechowuje konfigurację i historię danych dla każdego wykresu.
 // Klucze odpowiadają identyfikatorom canvas w pliku charts.html lub są dynamicznie dodawane dla GPU.
@@ -355,15 +355,24 @@ function resetAllCharts() {
     fetchAndRenderCharts(); // Pobierz i wypełnij danymi natychmiast po resecie
 }
 
-let chartUpdateInterval; // Zmienna do przechowywania identyfikatora interwału
+let chartUpdateInterval=null; // Zmienna do przechowywania identyfikatora interwału
 
 // Nasłuchuj zdarzenia załadowania DOM
 document.addEventListener('DOMContentLoaded', () => {
-    // Sprawdź, czy jesteśmy na stronie z wykresami (np. poprzez klasę kontenera)
     if (document.querySelector('.container-charts')) {
-        setupInitialCharts(); // Zainicjuj wykresy z pustymi danymi od razu
-        fetchAndRenderCharts(); // Pobierz pierwsze dane natychmiast
-        chartUpdateInterval = setInterval(fetchAndRenderCharts, 1000); // Uruchom cykliczne pobieranie danych co sekundę
+        setupInitialCharts();
+        fetchAndRenderCharts();
+
+        if (!chartUpdateInterval) {
+            chartUpdateInterval = setInterval(fetchAndRenderCharts, 1000);
+        }
+    }
+});
+
+window.addEventListener('beforeunload', () => {
+    if (chartUpdateInterval) {
+        clearInterval(chartUpdateInterval);
+        chartUpdateInterval = null;
     }
 });
 
