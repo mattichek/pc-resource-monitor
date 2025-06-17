@@ -1,8 +1,5 @@
 import cpuinfo
+import psutil
 
-info = cpuinfo.get_cpu_info()
-x = cpuinfo.get_cpu_info_json()
+x = psutil.sensors_temperatures()
 print(x)
-
-for key, value in info.items():
-    print(f"{key}: {value}")
