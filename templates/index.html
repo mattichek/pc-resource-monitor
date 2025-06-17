@@ -14,6 +14,9 @@
         <div class="monitor-section">
             <h2>Procesor (CPU)</h2>
             <div class="monitor-item">
+                <span id="processor-name">--</span>
+            </div>
+            <div class="monitor-item">
                 <span>Użycie:</span>
                 <span id="cpu-usage">--%</span>
             </div>
@@ -25,16 +28,8 @@
                 <span class="max-value">Max: <span id="cpuUsage-max">--%</span></span>
             </div>
             <div class="monitor-item">
-                <span>Nazwa procesora:</span>
-                <span id="processor-name">--</span>
-            </div>
-            <div class="monitor-item">
                 <span>Taktowanie:</span>
-                <span id="cpu-clock">-- GHz</span>
-            </div>
-            <div class="min-max-values">
-                <span class="min-value">Min: <span id="cpuClock-min">-- GHz</span></span>
-                <span class="max-value">Max: <span id="cpuClock-max">-- GHz</span></span>
+                <span id="cpu_current_basic_speed">-- GHz</span>
             </div>
             <div class="monitor-item">
                 <span>Cache L2:</span>
@@ -138,7 +133,6 @@
         <div class="monitor-section" id="gpu-section" style="display: none;">
             <h2>Karta Graficzna (GPU)</h2>
             <div id="gpu-details-container">
-                <p>Brak dostępnych danych GPU lub brak kart NVIDIA.</p>
             </div>
         </div>
 

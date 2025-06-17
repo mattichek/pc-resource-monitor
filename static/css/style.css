@@ -18,7 +18,7 @@ body {
     border-radius: 10px;
     box-shadow: 0 0 25px rgba(0, 0, 0, 0.8); /* Stronger shadow */
     width: 90%;
-    max-width: 1200px;
+    max-width: 1600px;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 25px;
@@ -202,11 +202,11 @@ h1 {
 }
 
 /* Dodano styl dla kart wykresów GPU */
-.gpu-chart-card {
+/* .gpu-chart-card { */
     /* Domyślnie dziedziczy style z .chart-card */
     /* Możesz dodać tutaj specyficzne style dla kart GPU, jeśli potrzebujesz */
     /* Np. border: 2px solid #FF5722; */
-}
+/* } */
 
 
 .chart-card h2 {

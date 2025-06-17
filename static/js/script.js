@@ -6,7 +6,7 @@ const API_URL = '/api/stats';
 let monitorStats = {
     // Ważne: klucze tutaj muszą odpowiadać kluczom zwracanym przez API Flaska
     cpu_usage: { min: Infinity, max: -Infinity, unit: '%', decimals: 0, idPrefix: 'cpuUsage' },
-    cpu_clock: { min: Infinity, max: -Infinity, unit: ' GHz', decimals: 2, idPrefix: 'cpuClock' },
+    cpu_current_basic_speed: { min: Infinity, max: -Infinity, unit: ' GHz', decimals: 2, idPrefix: 'cpuBasicClock' },
     processor_name: { min: Infinity, max: -Infinity, unit: '', decimals: 0, idPrefix: 'processorName', skipMinMax: true },
     l2_cache: { min: Infinity, max: -Infinity, unit: '', decimals: 0, idPrefix: 'l2Cache', skipMinMax: true },
     l3_cache: { min: Infinity, max: -Infinity, unit: '', decimals: 0, idPrefix: 'l3Cache', skipMinMax: true },
@@ -117,7 +117,7 @@ function renderGpuSections(gpuStats) {
         if (!gpuSubsection) {
             const gpuHtml = `
                 <div class="monitor-subsection" id="${gpuId}-subsection">
-                    <h3>${gpuName} (ID: ${gpu.id})</h3>
+                    <h3>${gpuName}</h3>
                     <div class="monitor-item">
                         <span>Obciążenie:</span>
                         <span id="${gpuId}-load">${gpu.load}%</span>
@@ -236,7 +236,7 @@ async function fetchStatsAndRender() {
 
         // Aktualizacja CPU
         updateMetricDisplay('cpu_usage', data.cpu_usage, 'cpu-usage', 'cpu-progress', '%', 0, 50, 80);
-        updateMetricDisplay('cpu_clock', data.cpu_clock, 'cpu-clock', null, ' GHz', 2);
+        updateMetricDisplay('cpu_current_basic_speed', data.cpu_current_basic_speed, 'cpu_current_basic_speed', null, ' GHz', 2);
         document.getElementById('processor-name').textContent = data.processor_name;
         document.getElementById('l2-cache').textContent = data.l2_cache;
         document.getElementById('l3-cache').textContent = data.l3_cache;
@@ -277,7 +277,7 @@ async function fetchStatsAndRender() {
     } catch (error) {
         console.error('Błąd podczas pobierania danych lub renderowania (index.html):', error);
         const elementsToReset = [
-            'cpu-usage', 'cpu-clock',
+            'cpu-usage', 'cpu-basic-clock',
             'processor-name', 'l2-cache', 'l3-cache', 'cores-physical', 'cores-logical',
             'ram-usage', 'ram-free', 'ram-total',
             'disk-usage', 'disk-free', 'disk-total',

@@ -12,12 +12,10 @@ def get_system_stats():
 
     # CPU
     # Użycie CPU w ciągu ostatniego interwału (od ostatniego wywołania cpu_percent())
-    cpu_percent = psutil.cpu_percent(interval=0.1)  # Używamy 1 sekundy jako interwału, aby uzyskać aktualne dane
-    # cpu_percent=10
-    # Taktowanie CPU
-    cpu_freq = psutil.cpu_freq()
-    # Konwertujemy na GHz i zaokrąglamy do 2 miejsc po przecinku
-    cpu_current_freq = round(cpu_freq.current / 1000, 2) if cpu_freq else "N/A"
+    cpu_percent = psutil.cpu_percent(interval=0.1)  # Używamy 0.1 sekundy jako interwału, aby uzyskać aktualne dane
+    # Taktowanie podstawowe CPU
+    cpu_basic_speed = psutil.cpu_freq()
+    cpu_current_basic_speed = round(cpu_basic_speed.current / 1000, 2) if cpu_basic_speed else "N/A"
 
     # Nowe dane CPU z cpuinfo i psutil
     processor_name = "N/A"
@@ -93,12 +91,12 @@ def get_system_stats():
 
     return {
         "cpu_usage": cpu_percent,
-        "cpu_clock": cpu_current_freq,
-        "processor_name": processor_name, # Nowe dane
-        "l2_cache": l2_cache,             # Nowe dane
-        "l3_cache": l3_cache,             # Nowe dane
-        "cores_physical": cores_physical, # Nowe dane
-        "cores_logical": cores_logical,   # Nowe dane
+        "cpu_current_basic_speed": cpu_current_basic_speed,
+        "processor_name": processor_name, 
+        "l2_cache": l2_cache,             
+        "l3_cache": l3_cache,             
+        "cores_physical": cores_physical, 
+        "cores_logical": cores_logical,   
         "ram_usage": ram_usage_percent,
         "ram_total": ram_total_gb,
         "ram_free": ram_free_gb,
