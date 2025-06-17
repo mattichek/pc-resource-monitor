@@ -40,7 +40,7 @@
                 <span>Cache L2:</span>
                 <span id="l2-cache">--</span>
             </div>
-            <div class="monitor-item">
+             <div class="monitor-item">
                 <span>Cache L3:</span>
                 <span id="l3-cache">--</span>
             </div>
@@ -49,7 +49,7 @@
                 <span id="cores-physical">--</span>
             </div>
             <div class="monitor-item">
-                <span>Wątki logiczne:</span>
+                <span>Rdzenie logiczne:</span>
                 <span id="cores-logical">--</span>
             </div>
         </div>
@@ -68,16 +68,16 @@
                 <span class="max-value">Max: <span id="ramUsage-max">--%</span></span>
             </div>
             <div class="monitor-item">
-                <span>Wolne:</span>
+                <span>Całkowita:</span>
+                <span id="ram-total">-- GB</span>
+            </div>
+            <div class="monitor-item">
+                <span>Wolna:</span>
                 <span id="ram-free">-- GB</span>
             </div>
             <div class="min-max-values">
                 <span class="min-value">Min: <span id="ramFree-min">-- GB</span></span>
                 <span class="max-value">Max: <span id="ramFree-max">-- GB</span></span>
-            </div>
-            <div class="monitor-item">
-                <span>Całkowite:</span>
-                <span id="ram-total">-- GB</span>
             </div>
         </div>
 
@@ -95,16 +95,16 @@
                 <span class="max-value">Max: <span id="diskUsage-max">--%</span></span>
             </div>
             <div class="monitor-item">
-                <span>Wolne:</span>
+                <span>Całkowita:</span>
+                <span id="disk-total">-- GB</span>
+            </div>
+            <div class="monitor-item">
+                <span>Wolna:</span>
                 <span id="disk-free">-- GB</span>
             </div>
             <div class="min-max-values">
                 <span class="min-value">Min: <span id="diskFree-min">-- GB</span></span>
                 <span class="max-value">Max: <span id="diskFree-max">-- GB</span></span>
-            </div>
-            <div class="monitor-item">
-                <span>Całkowite:</span>
-                <span id="disk-total">-- GB</span>
             </div>
         </div>
 
@@ -142,9 +142,19 @@
             </div>
         </div>
 
+        <div class="monitor-section">
+            <h2>Informacje o systemie</h2>
+            <div class="monitor-item">
+                <span>System operacyjny:</span>
+                <span id="os-info">--</span>
+            </div>
+        </div>
+
         <div class="reset-button-container">
             <button class="reset-button" id="reset-stats-button">Resetuj statystyki min/max</button>
             <button class="reset-button" onclick="location.href='/charts'">Pokaż wykresy</button>
+            <button class="reset-button" id="save-stats-button">Zapisz obecne statystyki</button>
+            <button class="reset-button" onclick="location.href='/saved_charts'">Pokaż zapisane statystyki</button>
         </div>
 
         <div class="footer">

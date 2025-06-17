@@ -2,6 +2,7 @@ import psutil
 import GPUtil
 import cpuinfo
 import time
+import platform
 
 last_net_io_counters = None
 last_net_io_time = None

@@ -3,3 +3,4 @@ psutil==5.9.5 # Użyj konkretnej wersji lub nowszej, którą masz zainstalowaną
 Flask-Cors==3.0.10 # Użyj konkretnej wersji lub nowszej, którą masz zainstalowaną
 py-cpuinfo==9.0.0 # Dodaj tę linię (możesz użyć nowszej wersji, jeśli dostępna)
 GPUtil==1.4.0
+SQLAlchemy==2.0.25

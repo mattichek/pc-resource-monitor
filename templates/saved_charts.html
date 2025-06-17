@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor Zasobów Komputera - Zapisane Wykresy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.min.js"></script>
+</head>
+<body>
+    <div class="container-charts">
+        <h1>Zapisane Statystyki Systemowe</h1>
+
+        <div class="selection-controls">
+            <label for="savedStatsSelect">Wybierz zapis:</label>
+            <select id="savedStatsSelect">
+                <option value="">Wybierz datę zapisu</option>
+                {% for record in records %}
+                    <option value="{{ record.id }}">{{ record.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</option>
+                {% endfor %}
+            </select>
+            <button class="reset-button" id="load-selected-stats">Załaduj</button>
+            <button class="reset-button" id="reset-saved-charts">Resetuj Wykresy</button>
+        </div>
+
+        <div id="no-data-message" class="no-gpu-message" style="display: none;">
+            <p>Wybierz zapis z listy, aby wyświetlić wykresy.</p>
+        </div>
+
+        <div class="chart-grid" id="saved-chart-grid" style="display: none;">
+            <div class="chart-card">
+                <h2>Użycie Procesora (CPU)</h2>
+                <div class="chart-container-large">
+                    <canvas id="savedCpuUsageChart"></canvas>
+                </div>
+            </div>
+             <div class="chart-card">
+                <h2>Taktowanie Procesora (CPU)</h2>
+                <div class="chart-container-large">
+                    <canvas id="savedCpuClockChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h2>Użycie Pamięci RAM</h2>
+                <div class="chart-container-large">
+                    <canvas id="savedRamUsageChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h2>Wolna Pamięć RAM</h2>
+                <div class="chart-container-large">
+                    <canvas id="savedRamFreeChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h2>Użycie Dysku</h2>
+                <div class="chart-container-large">
+                    <canvas id="savedDiskUsageChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h2>Wolne Miejsce na Dysku</h2>
+                <div class="chart-container-large">
+                    <canvas id="savedDiskFreeChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h2>Pobieranie Sieci</h2>
+                <div class="chart-container-large">
+                    <canvas id="savedNetDownloadChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h2>Wysyłanie Sieci</h2>
+                <div class="chart-container-large">
+                    <canvas id="savedNetUploadChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h2>Aktywne Połączenia Sieciowe</h2>
+                <div class="chart-container-large">
+                    <canvas id="savedNetConnectionsChart"></canvas>
+                </div>
+            </div>
+            <div id="saved-gpu-charts-container" class="chart-grid-gpu">
+            </div>
+        </div>
+
+        <div class="button-row">
+            <button class="back-button" onclick="location.href='/'">Powrót do Monitora</button>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2025 Monitor Zasobów Komputera. Wszystkie prawa zastrzeżone.</p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/saved_charts_script.js') }}"></script>
+</body>
+</html>
