@@ -25,7 +25,7 @@ body {
 }
 
 h1 {
-    color: #4A90E2; /* Deep Blue for accent */
+    color: #EDEDED	; /* Deep Blue for accent */
     text-align: center;
     margin-bottom: 30px;
     grid-column: 1 / -1;
@@ -45,7 +45,7 @@ h1 {
 }
 
 .monitor-section h2 {
-    color: #6DAFFD; /* Lighter Deep Blue */
+    color: #EDEDED; /* Lighter Deep Blue */
     margin-top: 0;
     margin-bottom: 15px;
     font-size: 1.5em;
