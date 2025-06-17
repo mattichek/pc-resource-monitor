@@ -117,7 +117,9 @@ function renderGpuSections(gpuStats) {
         if (!gpuSubsection) {
             const gpuHtml = `
                 <div class="monitor-subsection" id="${gpuId}-subsection">
-                    <h3>${gpuName}</h3>
+                    <div class="monitor-item">
+                    <span>${gpuName}</span>
+                    </div>
                     <div class="monitor-item">
                         <span>Obciążenie:</span>
                         <span id="${gpuId}-load">${gpu.load}%</span>
