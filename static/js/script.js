@@ -6,7 +6,7 @@ const API_URL = '/api/stats';
 let monitorStats = {
     // Ważne: klucze tutaj muszą odpowiadać kluczom zwracanym przez API Flaska
     cpu_usage: { min: Infinity, max: -Infinity, unit: '%', decimals: 0, idPrefix: 'cpuUsage' },
-    cpu_current_basic_speed: { min: Infinity, max: -Infinity, unit: ' GHz', decimals: 2, idPrefix: 'cpuBasicClock' },
+    cpu_current_basic_speed: { min: Infinity, max: -Infinity, unit: ' GHz', decimals: 2, idPrefix: 'cpuCurrentBasicSpeed' },
     processor_name: { min: Infinity, max: -Infinity, unit: '', decimals: 0, idPrefix: 'processorName', skipMinMax: true },
     l2_cache: { min: Infinity, max: -Infinity, unit: '', decimals: 0, idPrefix: 'l2Cache', skipMinMax: true },
     l3_cache: { min: Infinity, max: -Infinity, unit: '', decimals: 0, idPrefix: 'l3Cache', skipMinMax: true },
@@ -238,7 +238,7 @@ async function fetchStatsAndRender() {
 
         // Aktualizacja CPU
         updateMetricDisplay('cpu_usage', data.cpu_usage, 'cpu-usage', 'cpu-progress', '%', 0, 50, 80);
-        updateMetricDisplay('cpu_current_basic_speed', data.cpu_current_basic_speed, 'cpu_current_basic_speed', null, ' GHz', 2);
+        updateMetricDisplay('cpu_current_basic_speed', data.cpu_current_basic_speed, 'cpu-current-basic-speed', null, ' GHz', 2);
         document.getElementById('processor-name').textContent = data.processor_name;
         document.getElementById('l2-cache').textContent = data.l2_cache;
         document.getElementById('l3-cache').textContent = data.l3_cache;

@@ -5,6 +5,7 @@ import time
 
 last_net_io_counters = None
 last_net_io_time = None
+
 def get_system_stats():
     """Zbiera aktualne statystyki systemu."""
     global last_net_io_counters 

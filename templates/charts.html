@@ -10,61 +10,25 @@
 <body>
     <div class="container-charts">
         <h1>Monitor Zasobów Komputera - Wykresy</h1>
-
         <div class="chart-grid" id="main-chart-grid">
             <div class="chart-card">
-                <h2>Użycie Procesora (CPU)</h2>
+                <h2>% Wykorzystania Podzespołów</h2>
                 <div class="chart-container-large">
-                    <canvas id="cpuUsageChart"></canvas>
+                    <canvas id="perfCombinedChart"></canvas>
                 </div>
             </div>
 
             <div class="chart-card">
-                <h2>Taktowanie Procesora (CPU)</h2>
-                <div class="chart-container-large">
-                    <canvas id="cpuClockChart"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-card">
-                <h2>Użycie Pamięci RAM</h2>
-                <div class="chart-container-large">
-                    <canvas id="ramUsageChart"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-card">
-                <h2>Wolna Pamięć RAM</h2>
+                <h2>Niewykorzystana Pamięć RAM</h2>
                 <div class="chart-container-large">
                     <canvas id="ramFreeChart"></canvas>
                 </div>
             </div>
 
             <div class="chart-card">
-                <h2>Użycie Dysku</h2>
+                <h2>Ruch Sieciowy</h2>
                 <div class="chart-container-large">
-                    <canvas id="diskUsageChart"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-card">
-                <h2>Wolne Miejsce na Dysku</h2>
-                <div class="chart-container-large">
-                    <canvas id="diskFreeChart"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-card">
-                <h2>Pobieranie Sieci</h2>
-                <div class="chart-container-large">
-                    <canvas id="netDownloadChart"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-card">
-                <h2>Wysyłanie Sieci</h2>
-                <div class="chart-container-large">
-                    <canvas id="netUploadChart"></canvas>
+                    <canvas id="netCombinedChart"></canvas>
                 </div>
             </div>
 
@@ -74,8 +38,21 @@
                     <canvas id="netConnectionsChart"></canvas>
                 </div>
             </div>
-            
+            <div class="chart-card">
+                <h2>Wykorzystana Pamięć GPU</h2>
+                <div class="chart-container-large">
+                    <canvas id="gpu0memoryUsedChart"></canvas>
+                </div>
             </div>
+
+            <div class="chart-card">
+                <h2>Temperatura GPU</h2>
+                <div class="chart-container-large">
+                    <canvas id="gpu0temperatureChart"></canvas>
+                </div>
+            </div>
+        </div>
+
 
         <div class="button-row">
             <button class="back-button" onclick="location.href='/'">Powrót do Monitora</button>
@@ -85,7 +62,9 @@
         <div class="footer">
             <p>&copy; 2025 Monitor Zasobów Komputera. Wszystkie prawa zastrzeżone.</p>
         </div>
+
     </div>
+
 
     <script src="{{ url_for('static', filename='js/charts-script.js') }}"></script>
 </body>
