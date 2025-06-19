@@ -89,7 +89,7 @@ def charts_collector_loop():
         data = get_chart_stats()
         with charts_lock:
             charts_data = data
-            charts_history.append({"timestamp": time.time(), "data": data}) # Dodajemy timestamp i dane
+            charts_history.append({"data": data}) # Dodajemy timestamp i dane
             # Utrzymujemy historię do MAX_CHART_HISTORY elementów
             if len(charts_history) > MAX_CHART_HISTORY:
                 charts_history.pop(0) # Usuwamy najstarszy element

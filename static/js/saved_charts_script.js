@@ -17,6 +17,22 @@ let savedChartConfig = {
 };
 
 /**
+ * Konwertuje string z snake_case na CamelCase i kapitalizuje pierwszą literę.
+ * Np. "cpu_usage" -> "CpuUsage"
+ * @param {string} str - String do konwersji.
+ * @returns {string} Skonwertowany string.
+ */
+function snakeToCamelCaseAndCapitalize(str) {
+    return str.replace(/_([a-z])/g, (g) => g[1].toUpperCase())
+              .charAt(0).toUpperCase() + str.slice(1).replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+}
+
+// Funkcja pomocnicza do kapitalizowania pierwszej litery ciągu (używana głównie dla GPU statConfig.key)
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+/**
  * Funkcja pomocnicza do tworzenia/aktualizowania wykresu Chart.js.
  * @param {string} chartId - ID elementu canvas.
  * @param {string} label - Etykieta zestawu danych.
@@ -39,6 +55,7 @@ function createOrUpdateChart(chartId, label, unit, borderColor, data, labels, de
     // Jeśli wykres już istnieje, zniszcz go, aby uniknąć błędów
     if (savedMonitorCharts[chartId]) {
         savedMonitorCharts[chartId].destroy();
+        console.log(`Zniszczono istniejący wykres: ${chartId}`);
     }
 
     savedMonitorCharts[chartId] = new Chart(chartContext, {
@@ -138,6 +155,7 @@ function createOrUpdateChart(chartId, label, unit, borderColor, data, labels, de
             }
         }
     });
+    console.log(`Zainicjalizowano/Zaktualizowano wykres: ${chartId}`);
 }
 
 /**
@@ -163,27 +181,38 @@ function renderCharts(savedData) {
     }
 
     // Wyciągnij etykiety czasu (timestampy) i konwertuj na obiekty Date
-    const labels = readings.map(reading => new Date(reading.timestamp * 1000));
+    // Dodano walidację, aby upewnić się, że timestamp jest liczbą
+    const labels = readings.map(reading => {
+        if (typeof reading.timestamp === 'number' && !isNaN(reading.timestamp)) {
+            return new Date(reading.timestamp * 1000);
+        }
+        console.warn(`Nieprawidłowy timestamp dla odczytu:`, reading.timestamp, `Użyto bieżącej daty jako fallback.`);
+        return new Date(); // Zwróć bieżącą datę jako fallback lub null, jeśli wolisz pominąć ten punkt
+    });
+    console.log("Etykiety czasu (Date objects):", labels);
 
     // Renderuj standardowe wykresy (CPU, RAM, Disk, Net)
     for (const key in savedChartConfig) {
         if (savedChartConfig.hasOwnProperty(key)) {
             const config = savedChartConfig[key];
-            const chartId = `saved${capitalizeFirstLetter(key)}Chart`;
+            // POPRAWIONA LINIA: Używamy snakeToCamelCaseAndCapitalize
+            const chartId = `saved${snakeToCamelCaseAndCapitalize(key)}Chart`;
             const chartCard = document.getElementById(chartId)?.closest('.chart-card');
 
             // Pobieramy konkretne dane dla danego klucza
             const data = readings.map(reading => {
                 const value = reading.data[key];
-                return typeof value === 'number' ? parseFloat(value.toFixed(config.decimals)) : null;
+                // Dodano walidację, aby upewnić się, że wartość jest liczbą
+                return typeof value === 'number' && !isNaN(value) ? parseFloat(value.toFixed(config.decimals)) : null;
             });
+            console.log(`Dane dla ${key} (${chartId}):`, data);
 
             // Sprawdź, czy istnieją sensowne dane dla tego wykresu (przynajmniej jeden nie-null)
-            if (data.every(val => val === null)) {
+            if (data.every(val => val === null || val === undefined)) {
                 if (chartCard) {
                     chartCard.style.display = 'none'; // Ukryj kartę wykresu, jeśli brak danych
                 }
-                console.warn(`Brak danych dla wykresu: ${key}. Ukrywanie karty.`);
+                console.warn(`Brak danych dla wykresu: ${key} (ID: ${chartId}). Ukrywanie karty.`);
             } else {
                 if (chartCard) {
                     chartCard.style.display = 'block'; // Upewnij się, że karta jest widoczna
@@ -217,6 +246,7 @@ function renderCharts(savedData) {
                 });
             }
         }
+        console.log("Wykryte urządzenia GPU:", gpuDevices);
 
         const gpuStatsToChart = [
             { key: 'load', label: 'Obciążenie', unit: '%', decimals: 0, borderColor: '#FFC107' },
@@ -230,38 +260,49 @@ function renderCharts(savedData) {
 
             gpuStatsToChart.forEach(statConfig => {
                 const canvasId = `savedGpu${gpuId}${capitalizeFirstLetter(statConfig.key)}Chart`;
-                const chartCard = document.createElement('div');
-                chartCard.className = 'chart-card';
-                chartCard.innerHTML = `
-                    <h2>${gpuName} - ${statConfig.label}</h2>
-                    <div class="chart-container-large">
-                        <canvas id="${canvasId}"></canvas>
-                    </div>
-                `;
-                gpuChartsContainer.appendChild(chartCard);
+                let chartCard = document.getElementById(canvasId)?.closest('.chart-card'); // Sprawdź, czy karta już istnieje
+
+                if (!chartCard) { // Jeśli karta nie istnieje, stwórz ją
+                    chartCard = document.createElement('div');
+                    chartCard.className = 'chart-card';
+                    chartCard.innerHTML = `
+                        <h2>${gpuName} - ${statConfig.label}</h2>
+                        <div class="chart-container-large">
+                            <canvas id="${canvasId}"></canvas>
+                        </div>
+                    `;
+                    gpuChartsContainer.appendChild(chartCard);
+                    console.log(`Dodano nową kartę dla GPU: ${gpuName} - ${statConfig.label} (ID: ${canvasId})`);
+                } else {
+                    console.log(`Karta dla GPU już istnieje: ${gpuName} - ${statConfig.label} (ID: ${canvasId})`);
+                }
 
                 const gpuDataSeries = readings.map(reading => {
                     const gpuStat = reading.data.gpu_stats ? reading.data.gpu_stats.find(g => g.id === parseInt(gpuId)) : null;
                     let value = null;
                     if (gpuStat && gpuStat[statConfig.key] !== undefined && gpuStat[statConfig.key] !== null) {
-                        value = gpuStat[statConfig.key];
-                        // Specjalna obsługa dla 'load' i 'memoryUtilisation', które mogą być w zakresie 0-1
-                        if (statConfig.key === 'load' || statConfig.key === 'memoryUtilisation') {
-                            value = value * 100;
+                         // Dodano walidację: upewnij się, że wartość jest liczbą
+                        if (typeof gpuStat[statConfig.key] === 'number' && !isNaN(gpuStat[statConfig.key])) {
+                            value = gpuStat[statConfig.key];
+                            // Specjalna obsługa dla 'load' i 'memoryUtilisation', które mogą być w zakresie 0-1
+                            if (statConfig.key === 'load' || statConfig.key === 'memoryUtilisation') {
+                                value = value * 100;
+                            }
                         }
                     }
                     return typeof value === 'number' ? parseFloat(value.toFixed(statConfig.decimals)) : null;
                 });
+                console.log(`Dane dla GPU ${gpuName} - ${statConfig.label}:`, gpuDataSeries);
 
                 // Sprawdź, czy są jakieś dane do wyświetlenia dla tego wykresu GPU
-                if (gpuDataSeries.every(val => val === null)) {
+                if (gpuDataSeries.every(val => val === null || val === undefined)) {
                     chartCard.style.display = 'none'; // Ukryj kartę, jeśli brak danych
                     console.warn(`Brak danych dla wykresu GPU: ${gpuName} - ${statConfig.label}. Ukrywanie karty.`);
                 } else {
                     chartCard.style.display = 'block';
                     createOrUpdateChart(
                         canvasId,
-                        `${gpuName} ${statConfig.label}`,
+                        `${gpuName} ${statConfig.label}`, // Etykieta wykresu z nazwą GPU
                         statConfig.unit,
                         statConfig.borderColor,
                         gpuDataSeries,
@@ -271,11 +312,36 @@ function renderCharts(savedData) {
                 }
             });
         }
+        // Usuń stare karty GPU, które mogły zostać z poprzedniego załadowania i już nie istnieją
+        gpuChartsContainer.querySelectorAll('.chart-card').forEach(card => {
+            const canvasElement = card.querySelector('canvas');
+            let isStillActive = false;
+            for (const gpuId in gpuDevices) {
+                gpuStatsToChart.forEach(statConfig => {
+                    if (canvasElement && canvasElement.id === `savedGpu${gpuId}${capitalizeFirstLetter(statConfig.key)}Chart`) {
+                        isStillActive = true;
+                    }
+                });
+            }
+            if (canvasElement && !isStillActive) {
+                // Jeśli wykres jest w savedMonitorCharts, zniszcz go
+                if (savedMonitorCharts[canvasElement.id]) {
+                    savedMonitorCharts[canvasElement.id].destroy();
+                    delete savedMonitorCharts[canvasElement.id];
+                }
+                card.remove();
+                console.log(`Usunięto starą kartę GPU: ${card.id}`);
+            }
+        });
+
     } else {
+        // Jeśli nie ma danych GPU z API, wyczyść wszystkie karty GPU z DOM
+        gpuChartsContainer.innerHTML = '';
         const noGpuMessage = document.createElement('p');
         noGpuMessage.className = 'no-gpu-message';
         noGpuMessage.textContent = "Brak dostępnych danych GPU dla tego zapisu lub brak kart NVIDIA.";
         gpuChartsContainer.appendChild(noGpuMessage);
+        console.warn("Brak danych GPU w zapisie.");
     }
 }
 
@@ -288,10 +354,12 @@ async function loadSelectedStats() {
 
     if (!selectedRecordId) {
         resetSavedCharts(); // Wyczyść wykresy i pokaż domyślny komunikat
+        console.log("Nie wybrano zapisu.");
         return;
     }
 
     try {
+        console.log(`Pobieranie danych dla rekordu ID: ${selectedRecordId}`);
         const response = await fetch(`${SAVED_API_URL}${selectedRecordId}`);
         const data = await response.json();
 
@@ -300,12 +368,14 @@ async function loadSelectedStats() {
             if (data.readings && data.readings.length > 0) {
                 renderCharts(data);
             } else {
+                console.warn("Załadowano dane, ale brak odczytów.");
                 document.getElementById('no-data-message').style.display = 'block';
                 document.getElementById('no-data-message').querySelector('p').textContent = "Brak szczegółowych danych dla wybranego zapisu.";
                 document.getElementById('saved-chart-grid').style.display = 'none';
                 resetSavedCharts();
             }
         } else {
+            console.error(`Błąd API: ${response.status} - ${data.message || 'Nieznany błąd'}`);
             document.getElementById('no-data-message').style.display = 'block';
             document.getElementById('no-data-message').querySelector('p').textContent = `Błąd ładowania danych: ${data.message || 'Nieznany błąd'}`;
             document.getElementById('saved-chart-grid').style.display = 'none';
@@ -324,6 +394,7 @@ async function loadSelectedStats() {
  * Funkcja do resetowania wszystkich wykresów i stanu UI.
  */
 function resetSavedCharts() {
+    console.log("Resetowanie wykresów...");
     // Zniszcz wszystkie instancje wykresów Chart.js
     for (const chartId in savedMonitorCharts) {
         if (savedMonitorCharts.hasOwnProperty(chartId) && savedMonitorCharts[chartId]) {
@@ -345,19 +416,16 @@ function resetSavedCharts() {
     // (na wypadek, gdyby zostały ukryte z powodu braku danych w poprzednim załadowaniu)
     for (const key in savedChartConfig) {
         if (savedChartConfig.hasOwnProperty(key)) {
-            const chartId = `saved${capitalizeFirstLetter(key)}Chart`;
+            const chartId = `saved${snakeToCamelCaseAndCapitalize(key)}Chart`;
             const chartCard = document.getElementById(chartId)?.closest('.chart-card');
             if (chartCard) {
                 chartCard.style.display = 'block';
             }
         }
     }
+    console.log("Wykresy zresetowane.");
 }
 
-// Funkcja pomocnicza do kapitalizowania pierwszej litery ciągu
-function capitalizeFirstLetter(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-}
 
 // Uruchomienie obsługi zdarzeń po załadowaniu DOM
 document.addEventListener('DOMContentLoaded', () => {
@@ -374,4 +442,5 @@ document.addEventListener('DOMContentLoaded', () => {
     // Wyświetl domyślny komunikat po załadowaniu strony
     document.getElementById('no-data-message').style.display = 'block';
     document.getElementById('saved-chart-grid').style.display = 'none';
+    console.log("DOM załadowany, początkowy stan UI ustawiony.");
 });
