@@ -9,82 +9,49 @@
 </head>
 <body>
     <div class="container-charts">
-        <h1>Monitor Zasobów Komputera - Historia Odczytów</h1>
+        <h1>Monitor Zasobów Komputera - Historia</h1>
 
         <div class="history-controls">
-            <button id="showAllHistoryBtn" class="active">Pokaż całą historię (50 odczytów)</button>
-            <button id="showSingleEntryBtn">Pokaż pojedynczy odczyt</button>
-            
-            <div id="singleEntrySelector" style="display: none;">
-                <label for="historyEntrySelect">Wybierz odczyt:</label>
-                <select id="historyEntrySelect">
-                    </select>
-                <button id="renderSelectedEntryBtn">Wyświetl wybrany odczyt</button>
-            </div>
+            <label for="readout-select">Wybierz odczyt:</label>
+            <select id="readout-select"></select>
+            <button id="load-readout-button">Załaduj odczyt</button>
+            <button id="delete-readout-button" class="delete-button">Usuń wybrany odczyt</button>
         </div>
 
-        <div class="chart-grid" id="history-chart-grid">
+        <div class="chart-grid" id="main-chart-grid">
             <div class="chart-card">
-                <h2>Historia Użycia CPU (%)</h2>
+                <h2>% Wykorzystania Podzespołów</h2>
                 <div class="chart-container-large">
-                    <canvas id="historyCpuUsageChart"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-card">
-                <h2>Historia Użycia RAM (%)</h2>
-                <div class="chart-container-large">
-                    <canvas id="historyRamUsageChart"></canvas>
+                    <canvas id="perfCombinedChart"></canvas>
                 </div>
             </div>
 
             <div class="chart-card">
-                <h2>Historia Użycia Dysku (%)</h2>
+                <h2>Niewykorzystana Pamięć RAM</h2>
                 <div class="chart-container-large">
-                    <canvas id="historyDiskUsageChart"></canvas>
+                    <canvas id="ramFreeChart"></canvas>
                 </div>
             </div>
 
             <div class="chart-card">
-                <h2>Historia Pobierania Sieci (KB/s)</h2>
+                <h2>Ruch Sieciowy</h2>
                 <div class="chart-container-large">
-                    <canvas id="historyNetDownloadChart"></canvas>
+                    <canvas id="netCombinedChart"></canvas>
                 </div>
             </div>
 
             <div class="chart-card">
-                <h2>Historia Wysyłania Sieci (KB/s)</h2>
+                <h2>Aktywne Połączenia Sieciowe</h2>
                 <div class="chart-container-large">
-                    <canvas id="historyNetUploadChart"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-card" id="historyGpuLoadCard" style="display: none;">
-                <h2>Historia Zużycia GPU (%)</h2>
-                <div class="chart-container-large">
-                    <canvas id="historyGpuLoadChart"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-card" id="historyGpuMemoryUsedCard" style="display: none;">
-                <h2>Historia Wykorzystanej Pamięci GPU (GB)</h2>
-                <div class="chart-container-large">
-                    <canvas id="historyGpuMemoryUsedChart"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-card" id="historyGpuTemperatureCard" style="display: none;">
-                <h2>Historia Temperatury GPU (°C)</h2>
-                <div class="chart-container-large">
-                    <canvas id="historyGpuTemperatureChart"></canvas>
+                    <canvas id="netConnectionsChart"></canvas>
                 </div>
             </div>
             
+            <div id="gpu-chart-container"></div>
         </div>
 
         <div class="button-row">
             <button class="back-button" onclick="location.href='/'">Powrót do Monitora</button>
-            <button class="back-button" onclick="location.href='/charts'">Powrót do Wykresów Live</button>
         </div>
 
         <div class="footer">

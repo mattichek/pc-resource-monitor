@@ -311,7 +311,7 @@ canvas {
 }
 
 .history-controls {
-    grid-column: 1 / -1;
+    grid-column: 1 / -1; /* Rozciągnij na całą szerokość siatki */
     text-align: center;
     margin-bottom: 20px;
     display: flex;
@@ -326,27 +326,71 @@ canvas {
 }
 
 .history-controls label {
-    font-size: 1em;
+    font-size: 1.1em;
     color: #EDEDED;
-    white-space: nowrap;
+    margin-right: 5px;
 }
 
-#historyEntrySelect,
-#renderSelectedEntryBtn {
-    padding: 8px 15px;
+.history-controls select {
+    padding: 8px 12px;
     border-radius: 5px;
-    border: 1px solid #4A90E2;
-    background-color: #1A1A22;
+    border: 1px solid #444;
+    background-color: #333;
     color: #EDEDED;
     font-size: 1em;
     cursor: pointer;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    outline: none;
+    appearance: none; /* Usuwa domyślne strzałki w niektórych przeglądarkach */
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23EDEDED%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13%205.7L146.2%20202.7%2018.6%2075.1c-6.7-6.7-17.7-6.7-24.4%200-6.7%206.7-6.7%2017.7%200%2024.4l130.4%20130.4c6.7%206.7%2017.7%206.7%2024.4%200l130.4-130.4c6.7-6.7%206.7-17.7%200-24.4-6.8-6.6-17.7-6.6-24.5.1z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 10px top 50%;
+    background-size: 12px auto;
+    min-width: 200px;
 }
 
-#renderSelectedEntryBtn {
-    background-color: #4A90E2;
+.history-controls select:hover,
+.history-controls select:focus {
+    border-color: #007bff; /* Podświetlenie przy najechaniu/fokusie */
 }
 
-#renderSelectedEntryBtn:hover {
-    background-color: #6DAFFD;
+.history-controls button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.history-controls button:hover {
+    background-color: #0056b3;
+}
+
+.history-controls button:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+}
+
+.delete-button {
+    background-color: #dc3545; /* Czerwony kolor dla przycisku usuwania */
+}
+
+.delete-button:hover {
+    background-color: #c82333;
+}
+
+/* Dostosowanie dla małych ekranów */
+@media (max-width: 768px) {
+    .history-controls {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .history-controls select {
+        width: 100%;
+    }
+    .history-controls button {
+        width: 100%;
+    }
 }

@@ -1,353 +1,450 @@
-// static/js/history-charts-script.js
-const HISTORY_API_URL = '/api/history';
+// history-charts-script.js
+const HISTORY_READOUTS_API_URL = '/api/get_historical_readouts';
+const HISTORY_DATA_API_URL = '/api/get_historical_data/'; // Dodamy ID odczytu na końcu
+const DELETE_READOUT_API_URL = '/api/delete_historical_readout/'; // Nowy endpoint do usunięcia odczytu
 
-let historyCharts = {}; // Stores chart instances
-let allHistoryData = []; // Stores all fetched history data (including grouped ones)
-let currentDisplayMode = 'all'; // 'all' or 'single'
+let monitorStats = {
+    'cpu_usage': { label: 'Zużycie CPU', unit: '%', borderColor: '#4A90E2', history: [], chart: null, decimals: 0, chartType: 'line' },
+    'ram_usage': { label: 'Zużycie RAM', unit: '%', borderColor: '#f0ad4e', history: [], chart: null, decimals: 0, chartType: 'line' },
+    'ram_free': { label: 'Wolna pamięć RAM', unit: ' GB', borderColor: '#5bc0de', history: [], chart: null, decimals: 2, chartType: 'line' },
+    'disk_usage': { label: 'Zużycie Dysku', unit: '%', borderColor: '#DAF7A6', history: [], chart: null, decimals: 0, chartType: 'line' },
+    'net_download': { label: 'Pobieranie Sieci', unit: ' KB/s', borderColor: '#673ab7', history: [], chart: null, decimals: 0, chartType: 'line' },
+    'net_upload': { label: 'Wysyłanie Sieci', unit: ' KB/s', borderColor: '#ff9800', history: [], chart: null, decimals: 0, chartType: 'line' },
+    'net_connections': { label: 'Aktywne Połączenia', unit: ' połączeń', borderColor: '#8bc34a', history: [], chart: null, decimals: 0, chartType: 'line' },
+    // GPU stats będą dodawane dynamicznie
+};
 
-// Helper function to destroy all charts
-function clearCharts() {
-    for (const key in historyCharts) {
-        if (historyCharts[key]) {
-            historyCharts[key].destroy();
-        }
-    }
-    historyCharts = {};
-    // Clear the chart grid content
-    document.getElementById('history-chart-grid').innerHTML = '';
-}
+let chartsInitialized = false;
 
-// Function to create or update a chart
-function createChart(ctx, label, dataPoints, borderColor, unit, decimals, chartType = 'line') {
-    // dataPoints should be an array of { x: label/id, y: value }
-    // Destroy existing chart if it exists
-    if (historyCharts[ctx.canvas.id]) {
-        historyCharts[ctx.canvas.id].destroy();
-    }
-
-    let xAxesType = 'linear'; // Default for multiple points (e.g., ID)
-    let pointRadius = 2; // Default for line chart
-    let backgroundColor = 'transparent';
-
-    if (chartType === 'bar') {
-        xAxesType = 'category'; // For single point bar chart
-        pointRadius = 5; // More visible point
-        backgroundColor = borderColor + '80'; // Add transparency to bar fill
-    }
-    
-    const newChart = new Chart(ctx, {
-        type: chartType,
-        data: {
-            labels: dataPoints.map(d => d.x),
-            datasets: [{
-                label: label,
-                data: dataPoints.map(d => d.y),
-                borderColor: borderColor,
-                backgroundColor: backgroundColor,
-                tension: 0.1,
-                fill: false,
-                pointRadius: pointRadius,
-                pointHoverRadius: pointRadius * 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: {
-                    type: xAxesType, // Dynamic type
-                    title: {
-                        display: true,
-                        text: xAxesType === 'linear' ? 'ID Odczytu' : 'Odczyt'
-                    },
-                    ticks: {
-                        maxRotation: 45,
-                        minRotation: 0,
-                        autoSkip: true,
-                        maxTicksLimit: xAxesType === 'linear' ? 10 : 5 // Limit for linear, less strict for category
-                    }
-                },
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: unit
-                    },
-                    ticks: {
-                        callback: function(value) {
-                            return value.toFixed(decimals) + unit;
-                        }
-                    }
-                }
-            },
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.dataset.label + ': ' + context.parsed.y.toFixed(decimals) + unit;
-                        }
-                    }
-                }
-            },
-            animation: false
-        }
-    });
-    historyCharts[ctx.canvas.id] = newChart; // Store the chart instance
-    return newChart;
-}
-
-
-async function fetchAndRenderHistoryData(mode = 'all', selectedId = null) {
+// Funkcja do pobierania i wypełniania listy rozwijanej
+async function populateReadoutSelect() {
     try {
-        const response = await fetch(HISTORY_API_URL);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        allHistoryData = await response.json(); // Store all data (including grouped ones)
+        const response = await fetch(HISTORY_READOUTS_API_URL);
+        const readouts = await response.json();
 
-        let dataPointsForCharts = [];
-        let chartRenderType = 'line'; // Default for 'all' mode
+        const selectElement = document.getElementById('readout-select');
+        selectElement.innerHTML = ''; // Wyczyść istniejące opcje
 
-        // Determine which data to render based on mode and selection
-        if (mode === 'all') {
-            // Filter out grouped entries for 'all' view, or process them differently
-            dataPointsForCharts = allHistoryData.filter(entry => !entry.wartosci.grouped_history_data);
-            chartRenderType = 'line';
-        } else if (mode === 'single' && selectedId) {
-            const selectedEntry = allHistoryData.find(e => String(e.id_odczytu) === String(selectedId));
-
-            if (!selectedEntry) {
-                console.warn(`Nie znaleziono wpisu dla ID: ${selectedId}`);
-                clearCharts();
-                document.getElementById('history-chart-grid').innerHTML = '<p class="no-gpu-message">Nie znaleziono danych dla wybranego odczytu.</p>';
-                return;
-            }
-
-            if (selectedEntry.wartosci.grouped_history_data) {
-                // Handle grouped data entry: display its sub-entries as a line chart
-                dataPointsForCharts = selectedEntry.wartosci.grouped_history_data.map(subEntry => ({
-                    id_odczytu: subEntry.id_odczytu_orig,
-                    timestamp: subEntry.timestamp_orig,
-                    wartosci: subEntry.data // This is the actual stats data for this sub-entry
-                }));
-                chartRenderType = 'line'; // A group of data points makes a line
-            } else {
-                // Handle single data entry: display as a bar chart
-                dataPointsForCharts = [selectedEntry];
-                chartRenderType = 'bar';
-            }
-        } else {
-            clearCharts();
-            document.getElementById('history-chart-grid').innerHTML = '<p class="no-gpu-message">Wybierz odczyt lub przełącz tryb wyświetlania.</p>';
+        if (readouts.status === 'error') {
+            console.error('Błąd podczas pobierania odczytów historycznych:', readouts.message);
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'Błąd ładowania historii';
+            selectElement.appendChild(option);
             return;
         }
 
-        // --- Start rendering ---
-        clearCharts(); // Clear existing charts before rendering new ones
-        const historyChartGrid = document.getElementById('history-chart-grid');
-        // Ensure grid has the correct initial structure for charts
-        historyChartGrid.innerHTML = `
-            <div class="chart-card">
-                <h2>Historia Użycia CPU (%)</h2>
-                <div class="chart-container-large">
-                    <canvas id="historyCpuUsageChart"></canvas>
-                </div>
-            </div>
-            <div class="chart-card">
-                <h2>Historia Użycia RAM (%)</h2>
-                <div class="chart-container-large">
-                    <canvas id="historyRamUsageChart"></canvas>
-                </div>
-            </div>
-            <div class="chart-card">
-                <h2>Historia Użycia Dysku (%)</h2>
-                <div class="chart-container-large">
-                    <canvas id="historyDiskUsageChart"></canvas>
-                </div>
-            </div>
-            <div class="chart-card">
-                <h2>Historia Pobierania Sieci (KB/s)</h2>
-                <div class="chart-container-large">
-                    <canvas id="historyNetDownloadChart"></canvas>
-                </div>
-            </div>
-            <div class="chart-card">
-                <h2>Historia Wysyłania Sieci (KB/s)</h2>
-                <div class="chart-container-large">
-                    <canvas id="historyNetUploadChart"></canvas>
-                </div>
-            </div>
-            <div class="chart-card" id="historyGpuLoadCard" style="display: none;">
-                <h2>Historia Zużycia GPU (%)</h2>
-                <div class="chart-container-large">
-                    <canvas id="historyGpuLoadChart"></canvas>
-                </div>
-            </div>
-            <div class="chart-card" id="historyGpuMemoryUsedCard" style="display: none;">
-                <h2>Historia Wykorzystanej Pamięci GPU (GB)</h2>
-                <div class="chart-container-large">
-                    <canvas id="historyGpuMemoryUsedChart"></canvas>
-                </div>
-            </div>
-            <div class="chart-card" id="historyGpuTemperatureCard" style="display: none;">
-                <h2>Historia Temperatury GPU (°C)</h2>
-                <div class="chart-container-large">
-                    <canvas id="historyGpuTemperatureChart"></canvas>
-                </div>
-            </div>
-        `;
+        if (readouts.length === 0) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'Brak zapisanych odczytów';
+            selectElement.appendChild(option);
+            document.getElementById('load-readout-button').disabled = true;
+            document.getElementById('delete-readout-button').disabled = true;
+            return;
+        }
 
-
-        // Hide/Show GPU cards based on data presence (recheck after parsing grouped data)
-        const gpuLoadCard = document.getElementById('historyGpuLoadCard');
-        const gpuMemoryUsedCard = document.getElementById('historyGpuMemoryUsedCard');
-        const gpuTemperatureCard = document.getElementById('historyGpuTemperatureCard');
-
-        const hasGpuData = dataPointsForCharts.some(entry => {
-            const stats = entry.wartosci;
-            const sourceStats = stats.charts_view_stats || stats.main_view_stats;
-            return sourceStats && sourceStats.gpu_stats && sourceStats.gpu_stats.length > 0;
+        readouts.forEach(readout => {
+            const option = document.createElement('option');
+            option.value = readout.id;
+            // Formatowanie daty dla lepszej czytelności
+            const date = new Date(readout.timestamp);
+            option.textContent = `${readout.id} - ${date.toLocaleString()}`;
+            selectElement.appendChild(option);
         });
 
-        if (gpuLoadCard) gpuLoadCard.style.display = hasGpuData ? 'block' : 'none';
-        if (gpuMemoryUsedCard) gpuMemoryUsedCard.style.display = hasGpuData ? 'block' : 'none';
-        if (gpuTemperatureCard) gpuTemperatureCard.style.display = hasGpuData ? 'block' : 'none';
-
-        // Helper to extract data for a specific key
-        const extractData = (key, gpuKey = null, decimalPlaces = 0) => {
-            return dataPointsForCharts.map(entry => {
-                const stats = entry.wartosci;
-                const sourceStats = stats.charts_view_stats || stats.main_view_stats;
-                let value = null;
-                if (sourceStats) {
-                    if (gpuKey && sourceStats.gpu_stats && sourceStats.gpu_stats.length > 0) {
-                        value = sourceStats.gpu_stats[0][gpuKey];
-                    } else if (sourceStats.hasOwnProperty(key)) {
-                        value = sourceStats[key];
-                    }
-                }
-                const label = dataPointsForCharts.length === 1 // If only one point
-                              ? `ID: ${entry.id_odczytu} (${new Date(entry.timestamp).toLocaleTimeString()})`
-                              : entry.id_odczytu; // Use ID for multiple points, looks cleaner
-                return { x: label, y: typeof value === 'number' ? parseFloat(value.toFixed(decimalPlaces)) : 0 };
-            });
-        };
-        
-        // Render charts
-        createChart(document.getElementById('historyCpuUsageChart').getContext('2d'), 'Użycie CPU', extractData('cpu_usage'), '#4A90E2', '%', 0, chartRenderType);
-        createChart(document.getElementById('historyRamUsageChart').getContext('2d'), 'Użycie RAM', extractData('ram_usage'), '#f0ad4e', '%', 0, chartRenderType);
-        createChart(document.getElementById('historyDiskUsageChart').getContext('2d'), 'Użycie Dysku', extractData('disk_usage'), '#d9534f', '%', 0, chartRenderType);
-        createChart(document.getElementById('historyNetDownloadChart').getContext('2d'), 'Pobieranie Sieci', extractData('net_download'), '#673ab7', ' KB/s', 0, chartRenderType);
-        createChart(document.getElementById('historyNetUploadChart').getContext('2d'), 'Wysyłanie Sieci', extractData('net_upload'), '#ff9800', ' KB/s', 0, chartRenderType);
-        
-        if (hasGpuData) {
-            createChart(document.getElementById('historyGpuLoadChart').getContext('2d'), 'Zużycie GPU', extractData('gpu_stats', 'load'), '#FF5722', '%', 0, chartRenderType);
-            createChart(document.getElementById('historyGpuMemoryUsedChart').getContext('2d'), 'Pamięć Używana GPU', extractData('gpu_stats', 'memoryUsed', 2), '#009688', ' GB', 2, chartRenderType);
-            createChart(document.getElementById('historyGpuTemperatureChart').getContext('2d'), 'Temperatura GPU', extractData('gpu_stats', 'temperature'), '#e91e63', ' °C', 0, chartRenderType);
-        }
+        document.getElementById('load-readout-button').disabled = false;
+        document.getElementById('delete-readout-button').disabled = false;
 
     } catch (error) {
-        console.error('Błąd podczas pobierania lub renderowania danych historycznych:', error);
-        clearCharts(); // Clear any existing charts
-        const historyChartGrid = document.getElementById('history-chart-grid');
-        if (historyChartGrid) {
-            historyChartGrid.innerHTML = '<p class="no-gpu-message">Błąd podczas ładowania danych historycznych. Spróbuj odświeżyć stronę lub upewnij się, że serwer działa.</p>';
+        console.error('Błąd podczas pobierania listy odczytów:', error);
+        const selectElement = document.getElementById('readout-select');
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'Błąd sieci';
+        selectElement.appendChild(option);
+    }
+}
+
+// Funkcja do dynamicznego tworzenia wykresów
+function createOrUpdateChart(chartId, label, unit, borderColor, dataPoints, chartType = 'line') {
+    const ctx = document.getElementById(chartId);
+    if (!ctx) return null;
+
+    if (monitorStats[chartId] && monitorStats[chartId].chart) {
+        // Jeśli wykres już istnieje, zaktualizuj dane
+        monitorStats[chartId].chart.data.datasets[0].data = dataPoints;
+        monitorStats[chartId].chart.update();
+        return monitorStats[chartId].chart;
+    } else {
+        // Stwórz nowy wykres
+        const newChart = new Chart(ctx, {
+            type: chartType,
+            data: {
+                datasets: [{
+                    label: label,
+                    data: dataPoints,
+                    borderColor: borderColor,
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.1,
+                    pointRadius: 0 // Ukryj punkty na wykresie
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 0 // Wyłącz animacje dla szybszego renderowania
+                },
+                scales: {
+                    x: {
+                        type: 'linear', // Użyj skali liniowej dla indexu danych
+                        title: {
+                            display: true,
+                            text: 'Punkt Czasowy'
+                        },
+                        min: 0, // Zawsze zaczynaj od 0
+                        max: dataPoints.length > 0 ? dataPoints.length - 1 : 1, // Ustaw max na podstawie ilości danych
+                        ticks: {
+                            callback: function(value, index, values) {
+                                return value; // Wyświetlaj numery punktów czasowych
+                            }
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: unit
+                        },
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                }
+            }
+        });
+        return newChart;
+    }
+}
+
+// Funkcja do renderowania wykresów
+function renderCharts(historyData) {
+    // Resetuj historie dla wszystkich statystyk
+    for (const key in monitorStats) {
+        monitorStats[key].history = [];
+        // Zniszcz istniejące wykresy przed ponownym renderowaniem
+        if (monitorStats[key].chart) {
+            monitorStats[key].chart.destroy();
+            monitorStats[key].chart = null;
         }
     }
-}
 
-// Function to populate the select dropdown for single entry mode
-function populateHistorySelect() {
-    const selectElement = document.getElementById('historyEntrySelect');
-    selectElement.innerHTML = ''; // Clear previous options
+    // Usuń dynamicznie dodane wykresy GPU
+    // Zmieniono 'const' na 'let'
+    let gpuChartContainer = document.getElementById('gpu-chart-container');
+    if (gpuChartContainer) {
+        gpuChartContainer.innerHTML = '';
+    }
+    
+    // Zbuduj dane dla wykresów na podstawie historyData
+    historyData.forEach((record, index) => {
+        // Dodaj dane do historii dla istniejących statystyk
+        for (const key in monitorStats) {
+            if (record.hasOwnProperty(key)) {
+                monitorStats[key].history.push({ x: index, y: record[key] });
+            }
+        }
 
-    // Add a default option
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.textContent = 'Wybierz odczyt...';
-    selectElement.appendChild(defaultOption);
+        // Obsługa GPU - dodawanie dynamicznych statystyk i ich historii
+        if (record.gpu_stats && record.gpu_stats.length > 0) {
+            record.gpu_stats.forEach((gpu, gpuIndex) => {
+                // Dodaj nowe statystyki GPU do monitorStats jeśli ich jeszcze nie ma
+                const gpuLoadKey = `gpu-${gpuIndex}-load`;
+                const gpuMemoryUsedKey = `gpu-${gpuIndex}-memoryUsed`;
+                const gpuTemperatureKey = `gpu-${gpuIndex}-temperature`;
 
-    // Populate the select dropdown with available entries
-    allHistoryData.forEach(entry => {
-        const option = document.createElement('option');
-        option.value = entry.id_odczytu;
-        const date = new Date(entry.timestamp);
-        // Add a special label for grouped entries
-        const entryLabel = entry.wartosci.grouped_history_data 
-            ? `GRUPA: ID ${entry.id_odczytu} (${new Date(entry.timestamp).toLocaleString()}) - ${entry.wartosci.grouped_history_data.length} odczytów`
-            : `ID: ${entry.id_odczytu} - ${date.toLocaleString()}`;
-        option.textContent = entryLabel;
-        selectElement.appendChild(option);
+                if (!monitorStats[gpuLoadKey]) {
+                    monitorStats[gpuLoadKey] = { label: `GPU ${gpuIndex} - Zużycie`, unit: '%', borderColor: getRandomColor(), history: [], chart: null, decimals: 0, chartType: 'line' };
+                }
+                if (!monitorStats[gpuMemoryUsedKey]) {
+                    monitorStats[gpuMemoryUsedKey] = { label: `GPU ${gpuIndex} - Pamięć Używana`, unit: ' GB', borderColor: getRandomColor(), history: [], chart: null, decimals: 2, chartType: 'line' };
+                }
+                if (!monitorStats[gpuTemperatureKey]) {
+                    monitorStats[gpuTemperatureKey] = { label: `GPU ${gpuIndex} - Temperatura`, unit: ' °C', borderColor: getRandomColor(), history: [], chart: null, decimals: 0, chartType: 'line' };
+                }
+
+                // Dodaj dane do historii GPU
+                monitorStats[gpuLoadKey].history.push({ x: index, y: gpu.load });
+                monitorStats[gpuMemoryUsedKey].history.push({ x: index, y: gpu.memoryUsed });
+                monitorStats[gpuTemperatureKey].history.push({ x: index, y: gpu.temperature });
+            });
+        }
     });
 
-    // Optionally, select the latest entry by default
-    if (allHistoryData.length > 0) {
-        selectElement.value = allHistoryData[allHistoryData.length - 1].id_odczytu;
+    // Renderuj wykresy
+    const chartGrid = document.getElementById('main-chart-grid');
+    if (!chartGrid) {
+        console.error("Element o ID 'main-chart-grid' nie został znaleziony.");
+        return;
+    }
+
+    // Wykresy CPU, RAM, Disk, Net
+    monitorStats.cpu_usage.chart = createOrUpdateChart(
+        'perfCombinedChart',
+        'Zużycie CPU',
+        '%',
+        monitorStats.cpu_usage.borderColor,
+        monitorStats.cpu_usage.history
+    );
+    // Możesz tutaj dodać inne linie do tego samego wykresu, jeśli chcesz
+    if (monitorStats.cpu_usage.chart) {
+        // Dodaj zużycie RAM do tego samego wykresu
+        const ramDataset = {
+            label: monitorStats.ram_usage.label,
+            data: monitorStats.ram_usage.history,
+            borderColor: monitorStats.ram_usage.borderColor,
+            borderWidth: 2,
+            fill: false,
+            tension: 0.1,
+            pointRadius: 0,
+            id: 'ram_usage'
+        };
+        const diskDataset = {
+            label: monitorStats.disk_usage.label,
+            data: monitorStats.disk_usage.history,
+            borderColor: monitorStats.disk_usage.borderColor,
+            borderWidth: 2,
+            fill: false,
+            tension: 0.1,
+            pointRadius: 0,
+            id: 'disk_usage'
+        };
+        // Dodaj dataset, tylko jeśli jeszcze go nie ma
+        const existingRamDataset = monitorStats.cpu_usage.chart.data.datasets.find(ds => ds.id === 'ram_usage');
+        if (!existingRamDataset) {
+            monitorStats.cpu_usage.chart.data.datasets.push(ramDataset);
+        } else {
+            existingRamDataset.data = ramDataset.data;
+        }
+        const existingDiskDataset = monitorStats.cpu_usage.chart.data.datasets.find(ds => ds.id === 'disk_usage');
+        if (!existingDiskDataset) {
+            monitorStats.cpu_usage.chart.data.datasets.push(diskDataset);
+        } else {
+            existingDiskDataset.data = diskDataset.data;
+        }
+        monitorStats.cpu_usage.chart.update();
+    }
+
+
+    monitorStats.ram_free.chart = createOrUpdateChart(
+        'ramFreeChart',
+        monitorStats.ram_free.label,
+        monitorStats.ram_free.unit,
+        monitorStats.ram_free.borderColor,
+        monitorStats.ram_free.history
+    );
+
+    monitorStats.net_download.chart = createOrUpdateChart(
+        'netCombinedChart',
+        monitorStats.net_download.label,
+        monitorStats.net_download.unit,
+        monitorStats.net_download.borderColor,
+        monitorStats.net_download.history
+    );
+    if (monitorStats.net_download.chart) {
+        const netUploadDataset = {
+            label: monitorStats.net_upload.label,
+            data: monitorStats.net_upload.history,
+            borderColor: monitorStats.net_upload.borderColor,
+            borderWidth: 2,
+            fill: false,
+            tension: 0.1,
+            pointRadius: 0,
+            id: 'net_upload'
+        };
+        const existingNetUploadDataset = monitorStats.net_download.chart.data.datasets.find(ds => ds.id === 'net_upload');
+        if (!existingNetUploadDataset) {
+            monitorStats.net_download.chart.data.datasets.push(netUploadDataset);
+        } else {
+            existingNetUploadDataset.data = netUploadDataset.data;
+        }
+        monitorStats.net_download.chart.update();
+    }
+
+    monitorStats.net_connections.chart = createOrUpdateChart(
+        'netConnectionsChart',
+        monitorStats.net_connections.label,
+        monitorStats.net_connections.unit,
+        monitorStats.net_connections.borderColor,
+        monitorStats.net_connections.history
+    );
+
+    // Renderowanie wykresów GPU
+    if (gpuChartContainer) {
+        // Clear previous GPU charts
+        gpuChartContainer.innerHTML = '';
+        // Iterate over monitorStats to find GPU related charts
+        for (const key in monitorStats) {
+            if (key.startsWith('gpu-') && key.endsWith('-load')) {
+                const gpuIndex = key.split('-')[1];
+                const gpuLoadKey = `gpu-${gpuIndex}-load`;
+                const gpuMemoryUsedKey = `gpu-${gpuIndex}-memoryUsed`;
+                const gpuTemperatureKey = `gpu-${gpuIndex}-temperature`;
+
+                // Create a card for GPU charts
+                const gpuCard = document.createElement('div');
+                gpuCard.className = 'chart-card';
+                gpuCard.innerHTML = `<h2>GPU ${gpuIndex} - Zużycie</h2><div class="chart-container-large"><canvas id="gpu${gpuIndex}LoadChart"></canvas></div>`;
+                gpuChartContainer.appendChild(gpuCard);
+
+                monitorStats[gpuLoadKey].chart = createOrUpdateChart(
+                    `gpu${gpuIndex}LoadChart`,
+                    monitorStats[gpuLoadKey].label,
+                    monitorStats[gpuLoadKey].unit,
+                    monitorStats[gpuLoadKey].borderColor,
+                    monitorStats[gpuLoadKey].history
+                );
+
+                const gpuMemCard = document.createElement('div');
+                gpuMemCard.className = 'chart-card';
+                gpuMemCard.innerHTML = `<h2>GPU ${gpuIndex} - Pamięć Używana</h2><div class="chart-container-large"><canvas id="gpu${gpuIndex}MemoryUsedChart"></canvas></div>`;
+                gpuChartContainer.appendChild(gpuMemCard);
+
+                monitorStats[gpuMemoryUsedKey].chart = createOrUpdateChart(
+                    `gpu${gpuIndex}MemoryUsedChart`,
+                    monitorStats[gpuMemoryUsedKey].label,
+                    monitorStats[gpuMemoryUsedKey].unit,
+                    monitorStats[gpuMemoryUsedKey].borderColor,
+                    monitorStats[gpuMemoryUsedKey].history
+                );
+
+                const gpuTempCard = document.createElement('div');
+                gpuTempCard.className = 'chart-card';
+                gpuTempCard.innerHTML = `<h2>GPU ${gpuIndex} - Temperatura</h2><div class="chart-container-large"><canvas id="gpu${gpuIndex}TemperatureChart"></canvas></div>`;
+                gpuChartContainer.appendChild(gpuTempCard);
+
+                monitorStats[gpuTemperatureKey].chart = createOrUpdateChart(
+                    `gpu${gpuIndex}TemperatureChart`,
+                    monitorStats[gpuTemperatureKey].label,
+                    monitorStats[gpuTemperatureKey].unit,
+                    monitorStats[gpuTemperatureKey].borderColor,
+                    monitorStats[gpuTemperatureKey].history
+                );
+            }
+        }
+    }
+
+    chartsInitialized = true;
+}
+
+// Funkcja pomocnicza do generowania losowych kolorów dla wykresów GPU
+function getRandomColor() {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
+
+// Funkcja do ładowania wybranego odczytu
+async function loadSelectedReadout() {
+    const selectElement = document.getElementById('readout-select');
+    const selectedReadoutId = selectElement.value;
+
+    if (!selectedReadoutId) {
+        alert('Proszę wybrać odczyt z listy.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${HISTORY_DATA_API_URL}${selectedReadoutId}`);
+        const data = await response.json();
+
+        if (data.status === 'error') {
+            alert('Błąd podczas ładowania danych odczytu: ' + data.message);
+            console.error('Błąd:', data.message);
+            return;
+        }
+
+        renderCharts(data); // Renderuj wykresy z pobranych danych historycznych
+
+    } catch (error) {
+        console.error('Błąd podczas pobierania danych historycznych:', error);
+        alert('Wystąpił błąd sieci lub serwera podczas ładowania danych.');
     }
 }
 
+// Funkcja do usuwania wybranego odczytu
+async function deleteSelectedReadout() {
+    const selectElement = document.getElementById('readout-select');
+    const selectedReadoutId = selectElement.value;
 
-function setDisplayMode(mode) {
-    currentDisplayMode = mode;
-    const showAllBtn = document.getElementById('showAllHistoryBtn');
-    const showSingleBtn = document.getElementById('showSingleEntryBtn');
-    const singleEntrySelector = document.getElementById('singleEntrySelector');
-
-    if (mode === 'all') {
-        showAllBtn.classList.add('active');
-        showSingleBtn.classList.remove('active');
-        singleEntrySelector.style.display = 'none';
-        fetchAndRenderHistoryData('all'); // Render all data
-    } else { // mode === 'single'
-        showAllBtn.classList.remove('active');
-        showSingleBtn.classList.add('active');
-        singleEntrySelector.style.display = 'flex'; // Use flex for selector layout
-        populateHistorySelect(); // Populate dropdown when switching to single mode
-        // Do not render immediately, wait for user to select and click "Wyświetl"
-        clearCharts(); // Clear charts when switching to single mode, before selection
-        document.getElementById('history-chart-grid').innerHTML = '<p class="no-gpu-message">Wybierz odczyt z listy, aby wyświetlić dane.</p>';
+    if (!selectedReadoutId) {
+        alert('Proszę wybrać odczyt do usunięcia.');
+        return;
     }
+
+    if (!confirm('Czy na pewno chcesz usunąć ten odczyt?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${DELETE_READOUT_API_URL}${selectedReadoutId}`, {
+            method: 'DELETE'
+        });
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            alert('Odczyt usunięty pomyślnie!');
+            // Odśwież listę odczytów po usunięciu
+            populateReadoutSelect();
+            // Opcjonalnie: wyczyść wykresy po usunięciu odczytu
+            clearAllCharts();
+        } else {
+            alert('Błąd podczas usuwania odczytu: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Błąd podczas wysyłania żądania usunięcia:', error);
+        alert('Wystąpił błąd sieci lub serwera podczas usuwania odczytu.');
+    }
+}
+
+function clearAllCharts() {
+    for (const key in monitorStats) {
+        if (monitorStats[key].chart) {
+            monitorStats[key].chart.destroy();
+            monitorStats[key].chart = null;
+        }
+        monitorStats[key].history = [];
+    }
+    // Wyczyść dynamicznie dodane wykresy GPU
+    let gpuChartContainer = document.getElementById('gpu-chart-container'); // Zmieniono na 'let'
+    if (gpuChartContainer) {
+        gpuChartContainer.innerHTML = '';
+    }
+    chartsInitialized = false;
 }
 
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Initial load: show all history
-    setDisplayMode('all');
+    populateReadoutSelect(); // Wypełnij listę odczytów przy ładowaniu strony
 
-    // Event listeners for mode switching buttons
-    document.getElementById('showAllHistoryBtn').addEventListener('click', () => setDisplayMode('all'));
-    document.getElementById('showSingleEntryBtn').addEventListener('click', () => setDisplayMode('single'));
+    const loadButton = document.getElementById('load-readout-button');
+    if (loadButton) {
+        loadButton.addEventListener('click', loadSelectedReadout);
+    }
 
-    // Event listener for the "Wyświetl wybrany odczyt" button in single mode
-    document.getElementById('renderSelectedEntryBtn').addEventListener('click', () => {
-        const selectElement = document.getElementById('historyEntrySelect');
-        const selectedId = selectElement.value;
-        if (selectedId) {
-            fetchAndRenderHistoryData('single', selectedId);
-        } else {
-            alert('Proszę wybrać odczyt z listy.');
-        }
-    });
-
-    // Refresh all history data periodically (e.g., every 10 seconds), regardless of display mode
-    // This ensures that the dropdown for single selection has the latest data.
-    setInterval(() => {
-        fetch(HISTORY_API_URL)
-            .then(response => response.json())
-            .then(data => {
-                allHistoryData = data; // Update all history data
-                if (currentDisplayMode === 'single') {
-                    populateHistorySelect(); // Re-populate dropdown only if in single mode
-                    // If a grouped entry was selected and now updated, re-render it
-                    const selectedId = document.getElementById('historyEntrySelect').value;
-                    if (selectedId && allHistoryData.find(e => String(e.id_odczytu) === String(selectedId) && e.wartosci.grouped_history_data)) {
-                         fetchAndRenderHistoryData('single', selectedId);
-                    }
-                } else {
-                    // If in 'all' mode, re-render all charts with new data, filtering grouped entries
-                    fetchAndRenderHistoryData('all');
-                }
-            })
-            .catch(error => console.error('Błąd podczas odświeżania danych historycznych w tle:', error));
-    }, 10000); // Odświeżanie danych co 10 sekund
+    const deleteButton = document.getElementById('delete-readout-button');
+    if (deleteButton) {
+        deleteButton.addEventListener('click', deleteSelectedReadout);
+    }
 });
