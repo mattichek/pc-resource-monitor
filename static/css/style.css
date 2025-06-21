@@ -309,3 +309,44 @@ canvas {
         gap: 10px;
     }
 }
+
+.history-controls {
+    grid-column: 1 / -1;
+    text-align: center;
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap; /* Pozwala elementom zawijać się na mniejszych ekranach */
+    justify-content: center;
+    align-items: center;
+    gap: 15px; /* Odstęp między elementami */
+    background-color: #1A1A22; /* Dodałem tło dla spójności */
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.history-controls label {
+    font-size: 1em;
+    color: #EDEDED;
+    white-space: nowrap;
+}
+
+#historyEntrySelect,
+#renderSelectedEntryBtn {
+    padding: 8px 15px;
+    border-radius: 5px;
+    border: 1px solid #4A90E2;
+    background-color: #1A1A22;
+    color: #EDEDED;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+#renderSelectedEntryBtn {
+    background-color: #4A90E2;
+}
+
+#renderSelectedEntryBtn:hover {
+    background-color: #6DAFFD;
+}

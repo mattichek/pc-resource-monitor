@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor Zasobów Komputera - Historia</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container-charts">
+        <h1>Monitor Zasobów Komputera - Historia Odczytów</h1>
+
+        <div class="history-controls">
+            <button id="showAllHistoryBtn" class="active">Pokaż całą historię (50 odczytów)</button>
+            <button id="showSingleEntryBtn">Pokaż pojedynczy odczyt</button>
+            
+            <div id="singleEntrySelector" style="display: none;">
+                <label for="historyEntrySelect">Wybierz odczyt:</label>
+                <select id="historyEntrySelect">
+                    </select>
+                <button id="renderSelectedEntryBtn">Wyświetl wybrany odczyt</button>
+            </div>
+        </div>
+
+        <div class="chart-grid" id="history-chart-grid">
+            <div class="chart-card">
+                <h2>Historia Użycia CPU (%)</h2>
+                <div class="chart-container-large">
+                    <canvas id="historyCpuUsageChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h2>Historia Użycia RAM (%)</h2>
+                <div class="chart-container-large">
+                    <canvas id="historyRamUsageChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h2>Historia Użycia Dysku (%)</h2>
+                <div class="chart-container-large">
+                    <canvas id="historyDiskUsageChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h2>Historia Pobierania Sieci (KB/s)</h2>
+                <div class="chart-container-large">
+                    <canvas id="historyNetDownloadChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h2>Historia Wysyłania Sieci (KB/s)</h2>
+                <div class="chart-container-large">
+                    <canvas id="historyNetUploadChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card" id="historyGpuLoadCard" style="display: none;">
+                <h2>Historia Zużycia GPU (%)</h2>
+                <div class="chart-container-large">
+                    <canvas id="historyGpuLoadChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card" id="historyGpuMemoryUsedCard" style="display: none;">
+                <h2>Historia Wykorzystanej Pamięci GPU (GB)</h2>
+                <div class="chart-container-large">
+                    <canvas id="historyGpuMemoryUsedChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card" id="historyGpuTemperatureCard" style="display: none;">
+                <h2>Historia Temperatury GPU (°C)</h2>
+                <div class="chart-container-large">
+                    <canvas id="historyGpuTemperatureChart"></canvas>
+                </div>
+            </div>
+            
+        </div>
+
+        <div class="button-row">
+            <button class="back-button" onclick="location.href='/'">Powrót do Monitora</button>
+            <button class="back-button" onclick="location.href='/charts'">Powrót do Wykresów Live</button>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2025 Monitor Zasobów Komputera. Wszystkie prawa zastrzeżone.</p>
+        </div>
+
+    </div>
+
+    <script src="{{ url_for('static', filename='js/history-charts-script.js') }}"></script>
+</body>
+</html>
