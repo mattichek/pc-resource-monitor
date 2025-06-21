@@ -66,73 +66,73 @@ async function populateReadoutSelect() {
     }
 }
 
-// Funkcja do dynamicznego tworzenia wykresów
-function createOrUpdateChart(chartId, label, unit, borderColor, dataPoints, chartType = 'line') {
+// Funkcja do dynamicznego tworzenia lub aktualizowania wykresów
+function createOrUpdateChart(chartId, label, unit, borderColor, dataPoints, chartType = 'line', datasets = null) {
     const ctx = document.getElementById(chartId);
     if (!ctx) return null;
 
-    if (monitorStats[chartId] && monitorStats[chartId].chart) {
-        // Jeśli wykres już istnieje, zaktualizuj dane
-        monitorStats[chartId].chart.data.datasets[0].data = dataPoints;
-        monitorStats[chartId].chart.update();
-        return monitorStats[chartId].chart;
-    } else {
-        // Stwórz nowy wykres
-        const newChart = new Chart(ctx, {
-            type: chartType,
-            data: {
-                datasets: [{
-                    label: label,
-                    data: dataPoints,
-                    borderColor: borderColor,
-                    borderWidth: 2,
-                    fill: false,
-                    tension: 0.1,
-                    pointRadius: 0 // Ukryj punkty na wykresie
-                }]
+    // Check if a chart instance already exists for this canvas
+    if (Chart.getChart(ctx)) {
+        // If it exists, destroy it before creating a new one to prevent duplicates
+        Chart.getChart(ctx).destroy();
+    }
+
+    const chartData = {
+        datasets: datasets || [{ // Use provided datasets or default to a single one
+            label: label,
+            data: dataPoints,
+            borderColor: borderColor,
+            borderWidth: 2,
+            fill: false,
+            tension: 0.1,
+            pointRadius: 0 // Ukryj punkty na wykresie
+        }]
+    };
+
+    const newChart = new Chart(ctx, {
+        type: chartType,
+        data: chartData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 0 // Wyłącz animacje dla szybszego renderowania
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: {
-                    duration: 0 // Wyłącz animacje dla szybszego renderowania
-                },
-                scales: {
-                    x: {
-                        type: 'linear', // Użyj skali liniowej dla indexu danych
-                        title: {
-                            display: true,
-                            text: 'Punkt Czasowy'
-                        },
-                        min: 0, // Zawsze zaczynaj od 0
-                        max: dataPoints.length > 0 ? dataPoints.length - 1 : 1, // Ustaw max na podstawie ilości danych
-                        ticks: {
-                            callback: function(value, index, values) {
-                                return value; // Wyświetlaj numery punktów czasowych
-                            }
+            scales: {
+                x: {
+                    type: 'linear', // Użyj skali liniowej dla indexu danych
+                    title: {
+                        display: true,
+                        text: 'Punkt Czasowy'
+                    },
+                    min: 0, // Zawsze zaczynaj od 0
+                    max: dataPoints.length > 0 ? dataPoints.length - 1 : 1, // Ustaw max na podstawie ilości danych
+                    ticks: {
+                        callback: function(value, index, values) {
+                            return value; // Wyświetlaj numery punktów czasowych
                         }
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: unit
-                        },
-                        beginAtZero: true
                     }
                 },
-                plugins: {
-                    legend: {
-                        display: true
+                y: {
+                    title: {
+                        display: true,
+                        text: unit
                     },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false
-                    }
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
                 }
             }
-        });
-        return newChart;
-    }
+        }
+    });
+    return newChart;
 }
 
 // Funkcja do renderowania wykresów
@@ -147,18 +147,30 @@ function renderCharts(historyData) {
         }
     }
 
-    // Usuń dynamicznie dodane wykresy GPU
-    // Zmieniono 'const' na 'let'
-    let gpuChartContainer = document.getElementById('gpu-chart-container');
-    if (gpuChartContainer) {
-        gpuChartContainer.innerHTML = '';
+    const mainChartGrid = document.getElementById('main-chart-grid');
+    if (!mainChartGrid) {
+        console.error("Element o ID 'main-chart-grid' nie został znaleziony.");
+        return;
     }
-    
+
+    // Usuń dynamicznie dodane karty wykresów GPU
+    let dynamicChartCards = mainChartGrid.querySelectorAll('.chart-card[data-dynamic-gpu="true"]');
+    dynamicChartCards.forEach(card => card.remove());
+
+    // Resetuj monitorStats dla dynamicznych wpisów GPU dla każdego nowego ładowania danych
+    // To ważne, aby zapewnić prawidłowe niszczenie i tworzenie wykresów.
+    // Usuwamy tylko klucze związane z GPU, ponieważ podstawowe są statyczne.
+    for (const key in monitorStats) {
+        if (key.startsWith('gpu-')) {
+            delete monitorStats[key];
+        }
+    }
+
     // Zbuduj dane dla wykresów na podstawie historyData
     historyData.forEach((record, index) => {
-        // Dodaj dane do historii dla istniejących statystyk
+        // Dodaj dane do historii dla istniejących statystyk (nie-GPU)
         for (const key in monitorStats) {
-            if (record.hasOwnProperty(key)) {
+            if (record.hasOwnProperty(key) && !key.startsWith('gpu-')) {
                 monitorStats[key].history.push({ x: index, y: record[key] });
             }
         }
@@ -166,7 +178,6 @@ function renderCharts(historyData) {
         // Obsługa GPU - dodawanie dynamicznych statystyk i ich historii
         if (record.gpu_stats && record.gpu_stats.length > 0) {
             record.gpu_stats.forEach((gpu, gpuIndex) => {
-                // Dodaj nowe statystyki GPU do monitorStats jeśli ich jeszcze nie ma
                 const gpuLoadKey = `gpu-${gpuIndex}-load`;
                 const gpuMemoryUsedKey = `gpu-${gpuIndex}-memoryUsed`;
                 const gpuTemperatureKey = `gpu-${gpuIndex}-temperature`;
@@ -181,7 +192,6 @@ function renderCharts(historyData) {
                     monitorStats[gpuTemperatureKey] = { label: `GPU ${gpuIndex} - Temperatura`, unit: ' °C', borderColor: getRandomColor(), history: [], chart: null, decimals: 0, chartType: 'line' };
                 }
 
-                // Dodaj dane do historii GPU
                 monitorStats[gpuLoadKey].history.push({ x: index, y: gpu.load });
                 monitorStats[gpuMemoryUsedKey].history.push({ x: index, y: gpu.memoryUsed });
                 monitorStats[gpuTemperatureKey].history.push({ x: index, y: gpu.temperature });
@@ -190,60 +200,55 @@ function renderCharts(historyData) {
     });
 
     // Renderuj wykresy
-    const chartGrid = document.getElementById('main-chart-grid');
-    if (!chartGrid) {
-        console.error("Element o ID 'main-chart-grid' nie został znaleziony.");
-        return;
+
+    // 1. Wykres Wykorzystania Podzespołów (perfCombinedChart: CPU, RAM, Dysk, Zużycie GPU)
+    const perfCombinedChartCtx = document.getElementById('perfCombinedChart');
+    if (perfCombinedChartCtx) {
+        const perfDatasets = [
+            {
+                label: monitorStats.cpu_usage.label,
+                data: monitorStats.cpu_usage.history,
+                borderColor: monitorStats.cpu_usage.borderColor,
+                borderWidth: 2, fill: false, tension: 0.1, pointRadius: 0, yAxisID: 'y'
+            },
+            {
+                label: monitorStats.ram_usage.label,
+                data: monitorStats.ram_usage.history,
+                borderColor: monitorStats.ram_usage.borderColor,
+                borderWidth: 2, fill: false, tension: 0.1, pointRadius: 0, yAxisID: 'y'
+            },
+            {
+                label: monitorStats.disk_usage.label,
+                data: monitorStats.disk_usage.history,
+                borderColor: monitorStats.disk_usage.borderColor,
+                borderWidth: 2, fill: false, tension: 0.1, pointRadius: 0, yAxisID: 'y'
+            }
+        ];
+
+        // Dodaj Zużycie GPU do tego samego wykresu
+        for (const key in monitorStats) {
+            if (key.startsWith('gpu-') && key.endsWith('-load')) {
+                perfDatasets.push({
+                    label: monitorStats[key].label,
+                    data: monitorStats[key].history,
+                    borderColor: monitorStats[key].borderColor,
+                    borderWidth: 2, fill: false, tension: 0.1, pointRadius: 0, yAxisID: 'y'
+                });
+            }
+        }
+
+        monitorStats.cpu_usage.chart = createOrUpdateChart(
+            'perfCombinedChart',
+            '', // Etykieta nieużywana, bo mamy wiele datasetów
+            '%',
+            '', // Kolor nieużywany
+            historyData.map((_, i) => i), // Dummy data for x-axis scale
+            'line',
+            perfDatasets
+        );
     }
 
-    // Wykresy CPU, RAM, Disk, Net
-    monitorStats.cpu_usage.chart = createOrUpdateChart(
-        'perfCombinedChart',
-        'Zużycie CPU',
-        '%',
-        monitorStats.cpu_usage.borderColor,
-        monitorStats.cpu_usage.history
-    );
-    // Możesz tutaj dodać inne linie do tego samego wykresu, jeśli chcesz
-    if (monitorStats.cpu_usage.chart) {
-        // Dodaj zużycie RAM do tego samego wykresu
-        const ramDataset = {
-            label: monitorStats.ram_usage.label,
-            data: monitorStats.ram_usage.history,
-            borderColor: monitorStats.ram_usage.borderColor,
-            borderWidth: 2,
-            fill: false,
-            tension: 0.1,
-            pointRadius: 0,
-            id: 'ram_usage'
-        };
-        const diskDataset = {
-            label: monitorStats.disk_usage.label,
-            data: monitorStats.disk_usage.history,
-            borderColor: monitorStats.disk_usage.borderColor,
-            borderWidth: 2,
-            fill: false,
-            tension: 0.1,
-            pointRadius: 0,
-            id: 'disk_usage'
-        };
-        // Dodaj dataset, tylko jeśli jeszcze go nie ma
-        const existingRamDataset = monitorStats.cpu_usage.chart.data.datasets.find(ds => ds.id === 'ram_usage');
-        if (!existingRamDataset) {
-            monitorStats.cpu_usage.chart.data.datasets.push(ramDataset);
-        } else {
-            existingRamDataset.data = ramDataset.data;
-        }
-        const existingDiskDataset = monitorStats.cpu_usage.chart.data.datasets.find(ds => ds.id === 'disk_usage');
-        if (!existingDiskDataset) {
-            monitorStats.cpu_usage.chart.data.datasets.push(diskDataset);
-        } else {
-            existingDiskDataset.data = diskDataset.data;
-        }
-        monitorStats.cpu_usage.chart.update();
-    }
-
-
+    // 2. Wykres Wolnej pamięci RAM (ramFreeChart)
     monitorStats.ram_free.chart = createOrUpdateChart(
         'ramFreeChart',
         monitorStats.ram_free.label,
@@ -252,33 +257,35 @@ function renderCharts(historyData) {
         monitorStats.ram_free.history
     );
 
-    monitorStats.net_download.chart = createOrUpdateChart(
-        'netCombinedChart',
-        monitorStats.net_download.label,
-        monitorStats.net_download.unit,
-        monitorStats.net_download.borderColor,
-        monitorStats.net_download.history
-    );
-    if (monitorStats.net_download.chart) {
-        const netUploadDataset = {
-            label: monitorStats.net_upload.label,
-            data: monitorStats.net_upload.history,
-            borderColor: monitorStats.net_upload.borderColor,
-            borderWidth: 2,
-            fill: false,
-            tension: 0.1,
-            pointRadius: 0,
-            id: 'net_upload'
-        };
-        const existingNetUploadDataset = monitorStats.net_download.chart.data.datasets.find(ds => ds.id === 'net_upload');
-        if (!existingNetUploadDataset) {
-            monitorStats.net_download.chart.data.datasets.push(netUploadDataset);
-        } else {
-            existingNetUploadDataset.data = netUploadDataset.data;
-        }
-        monitorStats.net_download.chart.update();
+    // 3. Wykres Ruchu Sieciowego (netCombinedChart: Pobieranie, Wysyłanie)
+    const netCombinedChartCtx = document.getElementById('netCombinedChart');
+    if (netCombinedChartCtx) {
+        const netDatasets = [
+            {
+                label: monitorStats.net_download.label,
+                data: monitorStats.net_download.history,
+                borderColor: monitorStats.net_download.borderColor,
+                borderWidth: 2, fill: false, tension: 0.1, pointRadius: 0
+            },
+            {
+                label: monitorStats.net_upload.label,
+                data: monitorStats.net_upload.history,
+                borderColor: monitorStats.net_upload.borderColor,
+                borderWidth: 2, fill: false, tension: 0.1, pointRadius: 0
+            }
+        ];
+        monitorStats.net_download.chart = createOrUpdateChart(
+            'netCombinedChart',
+            '', // Etykieta nieużywana
+            monitorStats.net_download.unit,
+            '', // Kolor nieużywany
+            historyData.map((_, i) => i), // Dummy data for x-axis scale
+            'line',
+            netDatasets
+        );
     }
 
+    // 4. Wykres Aktywnych Połączeń Sieciowych (netConnectionsChart)
     monitorStats.net_connections.chart = createOrUpdateChart(
         'netConnectionsChart',
         monitorStats.net_connections.label,
@@ -287,63 +294,43 @@ function renderCharts(historyData) {
         monitorStats.net_connections.history
     );
 
-    // Renderowanie wykresów GPU
-    if (gpuChartContainer) {
-        // Clear previous GPU charts
-        gpuChartContainer.innerHTML = '';
-        // Iterate over monitorStats to find GPU related charts
-        for (const key in monitorStats) {
-            if (key.startsWith('gpu-') && key.endsWith('-load')) {
-                const gpuIndex = key.split('-')[1];
-                const gpuLoadKey = `gpu-${gpuIndex}-load`;
-                const gpuMemoryUsedKey = `gpu-${gpuIndex}-memoryUsed`;
-                const gpuTemperatureKey = `gpu-${gpuIndex}-temperature`;
 
-                // Create a card for GPU charts
-                const gpuCard = document.createElement('div');
-                gpuCard.className = 'chart-card';
-                gpuCard.innerHTML = `<h2>GPU ${gpuIndex} - Zużycie</h2><div class="chart-container-large"><canvas id="gpu${gpuIndex}LoadChart"></canvas></div>`;
-                gpuChartContainer.appendChild(gpuCard);
+    // 5. Dynamiczne generowanie wykresów Pamięci Używanej i Temperatury GPU
+    // Szukamy po wszystkich kluczach w monitorStats, które zaczynają się od 'gpu-'
+    // i kończą na '-memoryUsed' lub '-temperature'.
+    const gpuChartKeys = Object.keys(monitorStats).filter(key =>
+        key.startsWith('gpu-') && (key.endsWith('-memoryUsed') || key.endsWith('-temperature'))
+    );
 
-                monitorStats[gpuLoadKey].chart = createOrUpdateChart(
-                    `gpu${gpuIndex}LoadChart`,
-                    monitorStats[gpuLoadKey].label,
-                    monitorStats[gpuLoadKey].unit,
-                    monitorStats[gpuLoadKey].borderColor,
-                    monitorStats[gpuLoadKey].history
-                );
+    gpuChartKeys.forEach(key => {
+        const gpuIndex = key.split('-')[1];
+        const statType = key.split('-')[2]; // 'memoryUsed' or 'temperature'
+        const chartLabel = monitorStats[key].label;
+        const chartUnit = monitorStats[key].unit;
+        const chartColor = monitorStats[key].borderColor;
+        const chartHistory = monitorStats[key].history;
+        const chartCanvasId = `gpu${gpuIndex}${statType.charAt(0).toUpperCase() + statType.slice(1)}Chart`;
 
-                const gpuMemCard = document.createElement('div');
-                gpuMemCard.className = 'chart-card';
-                gpuMemCard.innerHTML = `<h2>GPU ${gpuIndex} - Pamięć Używana</h2><div class="chart-container-large"><canvas id="gpu${gpuIndex}MemoryUsedChart"></canvas></div>`;
-                gpuChartContainer.appendChild(gpuMemCard);
+        // Tworzymy nową kartę wykresu (div.chart-card)
+        const gpuCard = document.createElement('div');
+        gpuCard.className = 'chart-card';
+        gpuCard.setAttribute('data-dynamic-gpu', 'true'); // Oznaczamy jako dynamiczny dla łatwego usunięcia
+        gpuCard.innerHTML = `<h2>${chartLabel}</h2><div class="chart-container-large"><canvas id="${chartCanvasId}"></canvas></div>`;
+        mainChartGrid.appendChild(gpuCard); // Dodajemy do głównego kontenera
 
-                monitorStats[gpuMemoryUsedKey].chart = createOrUpdateChart(
-                    `gpu${gpuIndex}MemoryUsedChart`,
-                    monitorStats[gpuMemoryUsedKey].label,
-                    monitorStats[gpuMemoryUsedKey].unit,
-                    monitorStats[gpuMemoryUsedKey].borderColor,
-                    monitorStats[gpuMemoryUsedKey].history
-                );
-
-                const gpuTempCard = document.createElement('div');
-                gpuTempCard.className = 'chart-card';
-                gpuTempCard.innerHTML = `<h2>GPU ${gpuIndex} - Temperatura</h2><div class="chart-container-large"><canvas id="gpu${gpuIndex}TemperatureChart"></canvas></div>`;
-                gpuChartContainer.appendChild(gpuTempCard);
-
-                monitorStats[gpuTemperatureKey].chart = createOrUpdateChart(
-                    `gpu${gpuIndex}TemperatureChart`,
-                    monitorStats[gpuTemperatureKey].label,
-                    monitorStats[gpuTemperatureKey].unit,
-                    monitorStats[gpuTemperatureKey].borderColor,
-                    monitorStats[gpuTemperatureKey].history
-                );
-            }
-        }
-    }
+        // Tworzymy wykres
+        monitorStats[key].chart = createOrUpdateChart(
+            chartCanvasId,
+            chartLabel,
+            chartUnit,
+            chartColor,
+            chartHistory
+        );
+    });
 
     chartsInitialized = true;
 }
+
 
 // Funkcja pomocnicza do generowania losowych kolorów dla wykresów GPU
 function getRandomColor() {
@@ -426,10 +413,11 @@ function clearAllCharts() {
         }
         monitorStats[key].history = [];
     }
-    // Wyczyść dynamicznie dodane wykresy GPU
-    let gpuChartContainer = document.getElementById('gpu-chart-container'); // Zmieniono na 'let'
-    if (gpuChartContainer) {
-        gpuChartContainer.innerHTML = '';
+    // Usuń wszystkie dynamicznie dodane karty wykresów GPU
+    const mainChartGrid = document.getElementById('main-chart-grid');
+    if (mainChartGrid) {
+        let dynamicChartCards = mainChartGrid.querySelectorAll('.chart-card[data-dynamic-gpu="true"]');
+        dynamicChartCards.forEach(card => card.remove());
     }
     chartsInitialized = false;
 }

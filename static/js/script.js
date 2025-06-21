@@ -95,7 +95,7 @@ async function fetchStatsAndRender() {
                 // Add card-specific monitor-items
                 const gpuNameItem = document.createElement('div');
                 gpuNameItem.className = 'monitor-item';
-                gpuNameItem.innerHTML = `<span>Nazwa:</span> <span>${gpu.name}</span>`;
+                gpuNameItem.innerHTML = `<span>${gpu.name}</span>`;
                 gpuCard.appendChild(gpuNameItem);
 
                 const gpuLoadItem = document.createElement('div');

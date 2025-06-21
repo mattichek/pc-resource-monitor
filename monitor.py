@@ -76,6 +76,7 @@ def get_system_stats():
     for i, gpu in enumerate(gpus):
         gpu_stats.append({
             "id": i,
+            "name": gpu.name,
             "load": round(gpu.load * 100, 2), # % obciążenia
             "memoryUsed": round(gpu.memoryUsed / 1024, 2), # Pamięć używana w GB
             "memoryTotal": round(gpu.memoryTotal / 1024, 2), # Pamięć całkowita w GB
