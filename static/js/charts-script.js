@@ -1,4 +1,5 @@
 const API_URL = '/api/stats';
+const SAVE_API_URL = '/api/save_current_readout'; // DODANA LINIA
 const MAX_CHART_DATA_POINTS = 60;
 let chartDataIndex = 0;
 
@@ -147,6 +148,39 @@ function resetAllCharts() {
     }
     setupInitialCharts();
 }
+
+// NOWA FUNKCJA: Zapisywanie aktualnego odczytu (skopiowana z script.js)
+async function saveCurrentReadout() {
+    try {
+        const button = document.getElementById('save-readout-button');
+        button.disabled = true; // Dezaktywuj przycisk, aby zapobiec wielokrotnemu kliknięciu
+        button.textContent = 'Zapisuję...';
+
+        const response = await fetch(SAVE_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+            // Ciało żądania jest puste, bo serwer pobiera aktualne dane z pamięci
+        });
+
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            alert('Odczyt zapisany pomyślnie!');
+        } else {
+            alert('Błąd podczas zapisu odczytu: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Błąd podczas wysyłania żądania zapisu:', error);
+        alert('Wystąpił błąd sieci lub serwera podczas zapisu odczytu.');
+    } finally {
+        const button = document.getElementById('save-readout-button');
+        button.disabled = false; // Aktywuj przycisk z powrotem
+        button.textContent = 'Zapisz aktualny odczyt';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     if (document.querySelector('.container-charts')) {
         setupInitialCharts();
@@ -198,5 +232,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 resetBtn.dataset.bound = 'true';
             }
         }, 1000);
+
+        // DODANIE OBSŁUGI PRZYCISKU ZAPISU
+        const saveButton = document.getElementById('save-readout-button');
+        if (saveButton) {
+            saveButton.addEventListener('click', saveCurrentReadout);
+        }
     }
 });
