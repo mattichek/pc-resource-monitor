@@ -2,9 +2,7 @@
 const API_URL = '/api/stats';
 
 // Obiekt do przechowywania najniższych i najwyższych wartości
-// oraz konfiguracji formatowania dla każdej statystyki
 let monitorStats = {
-    // Ważne: klucze tutaj muszą odpowiadać kluczom zwracanym przez API Flaska
     cpu_usage: { min: Infinity, max: -Infinity, unit: '%', decimals: 0, idPrefix: 'cpuUsage' },
     cpu_current_basic_speed: { min: Infinity, max: -Infinity, unit: ' GHz', decimals: 2, idPrefix: 'cpuBasicClock' },
     processor_name: { min: Infinity, max: -Infinity, unit: '', decimals: 0, idPrefix: 'processorName', skipMinMax: true },
@@ -22,12 +20,102 @@ let monitorStats = {
     net_connections: { min: Infinity, max: -Infinity, unit: '', decimals: 0, idPrefix: 'netConnections' }
 };
 let statsInterval;
+
+// Funkcja do aktualizacji alertów
+function updateAlerts(data) {
+    // CPU
+    const cpuAlert = document.getElementById('alert-cpu');
+    const cpuValue = document.querySelector('#alert-cpu .alert-value');
+    cpuValue.textContent = `${data.cpu_usage}%`;
+    
+    if (data.cpu_usage > 90) {
+        cpuAlert.classList.add('alert-danger');
+        cpuAlert.classList.remove('alert-warning');
+    } else if (data.cpu_usage > 70) {
+        cpuAlert.classList.add('alert-warning');
+        cpuAlert.classList.remove('alert-danger');
+    } else {
+        cpuAlert.classList.remove('alert-warning', 'alert-danger');
+    }
+
+    // RAM
+    const ramAlert = document.getElementById('alert-ram');
+    const ramValue = document.querySelector('#alert-ram .alert-value');
+    ramValue.textContent = `${data.ram_usage}%`;
+    
+    if (data.ram_usage > 85) {
+        ramAlert.classList.add('alert-danger');
+        ramAlert.classList.remove('alert-warning');
+    } else if (data.ram_usage > 70) {
+        ramAlert.classList.add('alert-warning');
+        ramAlert.classList.remove('alert-danger');
+    } else {
+        ramAlert.classList.remove('alert-warning', 'alert-danger');
+    }
+
+    // Dysk
+    const diskAlert = document.getElementById('alert-disk');
+    const diskValue = document.querySelector('#alert-disk .alert-value');
+    diskValue.textContent = `${data.disk_usage}%`;
+    
+    if (data.disk_usage > 90) {
+        diskAlert.classList.add('alert-danger');
+        diskAlert.classList.remove('alert-warning');
+    } else if (data.disk_usage > 80) {
+        diskAlert.classList.add('alert-warning');
+        diskAlert.classList.remove('alert-danger');
+    } else {
+        diskAlert.classList.remove('alert-warning', 'alert-danger');
+    }
+
+    // GPU Load
+    const gpuAlert = document.getElementById('alert-gpu');
+    const gpuValue = document.querySelector('#alert-gpu .alert-value');
+    
+    // GPU Temperature
+    const gpuTempAlert = document.getElementById('alert-gpu-temp');
+    const gpuTempValue = document.querySelector('#alert-gpu-temp .alert-value');
+    
+    if (data.gpu_stats && data.gpu_stats.length > 0) {
+        const gpuLoad = data.gpu_stats[0].load;
+        const gpuTemp = data.gpu_stats[0].temperature;
+        
+        // Aktualizacja obciążenia GPU
+        gpuValue.textContent = `${gpuLoad}%`;
+        
+        if (gpuLoad > 90) {
+            gpuAlert.classList.add('alert-danger');
+            gpuAlert.classList.remove('alert-warning');
+        } else if (gpuLoad > 80) {
+            gpuAlert.classList.add('alert-warning');
+            gpuAlert.classList.remove('alert-danger');
+        } else {
+            gpuAlert.classList.remove('alert-warning', 'alert-danger');
+        }
+        
+        // Aktualizacja temperatury GPU
+        gpuTempValue.textContent = `${gpuTemp}°C`;
+        
+        if (gpuTemp > 85) {
+            gpuTempAlert.classList.add('alert-danger');
+            gpuTempAlert.classList.remove('alert-warning');
+        } else if (gpuTemp > 75) {
+            gpuTempAlert.classList.add('alert-warning');
+            gpuTempAlert.classList.remove('alert-danger');
+        } else {
+            gpuTempAlert.classList.remove('alert-warning', 'alert-danger');
+        }
+    } else {
+        gpuValue.textContent = "Brak";
+        gpuAlert.classList.remove('alert-warning', 'alert-danger');
+        gpuTempValue.textContent = "Brak";
+        gpuTempAlert.classList.remove('alert-warning', 'alert-danger');
+    }
+}
+
 // Funkcja do aktualizacji wartości min/max
 function updateMinMax(statKey, currentValue) {
     if (!monitorStats[statKey]) {
-        // This log is useful to see if new dynamic keys are being created or if expected ones are missing
-        // console.warn(`Statystyka o kluczu "${statKey}" nie istnieje w monitorStats. Inicjalizacja...`);
-        // If a dynamic GPU key is not found, initialize it here with defaults
         if (statKey.startsWith('gpu-')) {
             let unit = '';
             let decimals = 0;
@@ -41,7 +129,6 @@ function updateMinMax(statKey, currentValue) {
             }
             monitorStats[statKey] = { min: Infinity, max: -Infinity, unit: unit, decimals: decimals, idPrefix: statKey };
         } else {
-            // For non-GPU stats, if they're missing, it might indicate a configuration error
             return;
         }
     }
@@ -65,14 +152,14 @@ function updateMinMax(statKey, currentValue) {
     if (value < stat.min) {
         stat.min = value;
         if (minElement) minElement.textContent = `${value.toFixed(stat.decimals)}${stat.unit}`;
-    } else if (minElement && stat.min !== Infinity) { // Ensure min is displayed even if it doesn't change
+    } else if (minElement && stat.min !== Infinity) {
         minElement.textContent = `${stat.min.toFixed(stat.decimals)}${stat.unit}`;
     }
 
     if (value > stat.max) {
         stat.max = value;
         if (maxElement) maxElement.textContent = `${value.toFixed(stat.decimals)}${stat.unit}`;
-    } else if (maxElement && stat.max !== -Infinity) { // Ensure max is displayed even if it doesn't change
+    } else if (maxElement && stat.max !== -Infinity) {
         maxElement.textContent = `${stat.max.toFixed(stat.decimals)}${stat.unit}`;
     }
 }
@@ -94,25 +181,19 @@ function resetMinMaxStats() {
             if (maxElement) maxElement.textContent = `--${stat.unit}`;
         }
     }
-    // No longer need special GPU clearing here, as monitorStats handles it.
-    // Dynamic GPU keys will be re-initialized by fetchStatsAndRender as needed.
 }
 
 // Funkcja do renderowania sekcji GPU
 function renderGpuSections(gpuStats) {
     const gpuDetailsContainer = document.getElementById('gpu-details-container');
-    // Clear existing GPU sections only if the number of GPUs has changed
-    // or if we're sure it's the first render.
-    // A more robust check would involve comparing GPU names/IDs.
     if (gpuDetailsContainer.children.length !== gpuStats.length) {
-        gpuDetailsContainer.innerHTML = ''; // Clear only if structure needs to change
+        gpuDetailsContainer.innerHTML = '';
     }
 
     gpuStats.forEach((gpu, index) => {
         const gpuId = `gpu-${index}`;
         const gpuName = gpu.name;
 
-        // Check if the GPU section already exists to avoid re-rendering entire HTML
         let gpuSubsection = document.getElementById(`${gpuId}-subsection`);
         if (!gpuSubsection) {
             const gpuHtml = `
@@ -162,26 +243,20 @@ function renderGpuSections(gpuStats) {
                         <span class="max-value">Max: <span id="${gpuId}-temperature-max">-- °C</span></span>
                     </div>
                 </div>
-
-                
             `;
             gpuDetailsContainer.insertAdjacentHTML('beforeend', gpuHtml);
 
-
-            // Initialize monitorStats for this new GPU
             monitorStats[`${gpuId}-load`] = { min: Infinity, max: -Infinity, unit: '%', decimals: 0, idPrefix: `${gpuId}-load` };
             monitorStats[`${gpuId}-memoryUsed`] = { min: Infinity, max: -Infinity, unit: ' GB', decimals: 2, idPrefix: `${gpuId}-memoryUsed` };
             monitorStats[`${gpuId}-temperature`] = { min: Infinity, max: -Infinity, unit: ' °C', decimals: 0, idPrefix: `${gpuId}-temperature` };
         }
 
-        // Now, update values within the existing or newly created structure
         document.getElementById(`${gpuId}-load`).textContent = `${gpu.load}%`;
         document.getElementById(`${gpuId}-memoryUsed`).textContent = `${gpu.memoryUsed} GB`;
         document.getElementById(`${gpuId}-memoryTotal`).textContent = `${gpu.memoryTotal} GB`;
         document.getElementById(`${gpuId}-memoryFree`).textContent = `${gpu.memoryFree} GB`;
         document.getElementById(`${gpuId}-temperature`).textContent = `${gpu.temperature} °C`;
 
-        // Update progress bars
         const gpuLoadProgress = document.getElementById(`${gpuId}-progress-load`);
         if (gpuLoadProgress) {
             gpuLoadProgress.style.width = `${gpu.load}%`;
@@ -199,13 +274,11 @@ function renderGpuSections(gpuStats) {
             else if (memoryUsagePercent > 60) gpuMemoryProgress.classList.add('yellow');
         }
 
-        // Update min/max for GPU values
         updateMinMax(`${gpuId}-load`, gpu.load);
         updateMinMax(`${gpuId}-memoryUsed`, gpu.memoryUsed);
         updateMinMax(`${gpuId}-temperature`, gpu.temperature);
     });
 }
-
 
 // Funkcja do pobierania danych z API i renderowania
 async function fetchStatsAndRender() {
@@ -215,9 +288,11 @@ async function fetchStatsAndRender() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        // console.log("Dane pobrane z API (index.html):", data); // Do debugowania
 
-        // Funkcja pomocnicza do aktualizacji danych (BEZ wykresów)
+        // Aktualizacja alertów
+        updateAlerts(data);
+
+        // Funkcja pomocnicza do aktualizacji danych
         const updateMetricDisplay = (key, value, elementId, progressBarId, unit, decimals, thresholdYellow, thresholdRed) => {
             const element = document.getElementById(elementId);
             if (element) {
@@ -228,7 +303,7 @@ async function fetchStatsAndRender() {
                 const progressBar = document.getElementById(progressBarId);
                 if (progressBar) {
                     progressBar.style.width = `${value}%`;
-                    progressBar.className = 'progress-bar'; // Reset klas
+                    progressBar.className = 'progress-bar';
                     if (value > thresholdRed) progressBar.classList.add('red');
                     else if (value > thresholdYellow) progressBar.classList.add('yellow');
                 }
@@ -264,11 +339,10 @@ async function fetchStatsAndRender() {
         const gpuSection = document.getElementById('gpu-section');
         if (data.gpu_stats && data.gpu_stats.length > 0) {
             gpuSection.style.display = 'block';
-            renderGpuSections(data.gpu_stats); // Call the new rendering function
+            renderGpuSections(data.gpu_stats);
         } else {
             gpuSection.style.display = 'none';
             document.getElementById('gpu-details-container').innerHTML = '<p>Brak dostępnych danych GPU lub brak kart NVIDIA.</p>';
-            // Clear dynamic GPU keys from monitorStats if no GPUs are detected
             for (const key in monitorStats) {
                 if (monitorStats.hasOwnProperty(key) && key.startsWith('gpu-')) {
                     delete monitorStats[key];
@@ -279,7 +353,7 @@ async function fetchStatsAndRender() {
     } catch (error) {
         console.error('Błąd podczas pobierania danych lub renderowania (index.html):', error);
         const elementsToReset = [
-            'cpu-usage', 'cpu-basic-clock',
+            'cpu-usage', 'cpu_current_basic_speed',
             'processor-name', 'l2-cache', 'l3-cache', 'cores-physical', 'cores-logical',
             'ram-usage', 'ram-free', 'ram-total',
             'disk-usage', 'disk-free', 'disk-total',
@@ -301,7 +375,7 @@ async function fetchStatsAndRender() {
             }
         });
 
-        resetMinMaxStats(); // Resetuj statystyki w przypadku błędu
+        resetMinMaxStats();
     }
 }
 
@@ -314,5 +388,6 @@ document.addEventListener('DOMContentLoaded', () => {
         statsInterval = setInterval(fetchStatsAndRender, 1000);
     }
 });
+
 // Obsługa przycisku resetowania
 document.getElementById('reset-stats-button').addEventListener('click', resetMinMaxStats);
