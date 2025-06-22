@@ -9,6 +9,7 @@ body {
     align-items: flex-start;
     min-height: 100vh;
     box-sizing: border-box;
+    padding-top: 60px;
 }
 
 /* Kontener główny dla wszystkich sekcji */
@@ -182,6 +183,18 @@ h1 {
     align-items: center;
 }
 
+ /* .container {
+    background-color: #1A1A22; 
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.8); 
+    width: 90%;
+    max-width: 1600px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+}  */
+
 .chart-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); /* Większe kolumny dla wykresów */
@@ -210,7 +223,7 @@ h1 {
 
 
 .chart-card h2 {
-    color: #EDEDED;
+    color: #4A90E2;
     margin-top: 0;
     margin-bottom: 15px;
     font-size: 1.3em;
@@ -309,6 +322,92 @@ canvas {
         gap: 10px;
     }
 }
+
+.history-controls {
+    grid-column: 1 / -1; /* Rozciągnij na całą szerokość siatki */
+    text-align: center;
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap; /* Pozwala elementom zawijać się na mniejszych ekranach */
+    justify-content: center;
+    align-items: center;
+    gap: 15px; /* Odstęp między elementami */
+    background-color: #1A1A22; /* Dodałem tło dla spójności */
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.history-controls label {
+    font-size: 1.1em;
+    color: #EDEDED;
+    margin-right: 5px;
+}
+
+.history-controls select {
+    padding: 8px 12px;
+    border-radius: 5px;
+    border: 1px solid #444;
+    background-color: #333;
+    color: #EDEDED;
+    font-size: 1em;
+    cursor: pointer;
+    outline: none;
+    appearance: none; /* Usuwa domyślne strzałki w niektórych przeglądarkach */
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23EDEDED%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13%205.7L146.2%20202.7%2018.6%2075.1c-6.7-6.7-17.7-6.7-24.4%200-6.7%206.7-6.7%2017.7%200%2024.4l130.4%20130.4c6.7%206.7%2017.7%206.7%2024.4%200l130.4-130.4c6.7-6.7%206.7-17.7%200-24.4-6.8-6.6-17.7-6.6-24.5.1z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 10px top 50%;
+    background-size: 12px auto;
+    min-width: 200px;
+}
+
+.history-controls select:hover,
+.history-controls select:focus {
+    border-color: #007bff; /* Podświetlenie przy najechaniu/fokusie */
+}
+
+.history-controls button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.history-controls button:hover {
+    background-color: #0056b3;
+}
+
+.history-controls button:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+}
+
+.delete-button {
+    background-color: #dc3545; /* Czerwony kolor dla przycisku usuwania */
+}
+
+.delete-button:hover {
+    background-color: #c82333;
+}
+
+/* Dostosowanie dla małych ekranów */
+@media (max-width: 768px) {
+    .history-controls {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .history-controls select {
+        width: 100%;
+    }
+    .history-controls button {
+        width: 100%;
+    }
+}
+
 /* Pasek alertów */
 #alert-bar {
     position: fixed;
@@ -337,19 +436,12 @@ canvas {
 }
 
 .alert-value {
-    color: #38C768; /* Domyślnie zielony - OK */
+    color: #38C768;
 }
 
-/* Kolory alertów */
 .alert-warning .alert-value {
-    color: #DDAA00; /* Żółty - ostrzeżenie */
+    color: #DDAA00; 
 }
-
 .alert-danger .alert-value {
-    color: #CC3333; /* Czerwony - zagrożenie */
-}
-
-/* Dodatkowy margines dla głównej zawartości, aby pasek alertów nie zasłaniał */
-body {
-    padding-top: 60px;
+    color: #CC3333; 
 }

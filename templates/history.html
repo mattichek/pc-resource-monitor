@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitor Zasobów Komputera - Wykresy</title>
+    <title>Monitor Zasobów Komputera - Historia</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -18,7 +18,15 @@
         </div>
     </div>
     <div class="container-charts">
-        <h1>Monitor Zasobów Komputera - Wykresy</h1>
+        <h1>Monitor Zasobów Komputera - Historia</h1>
+
+        <div class="history-controls">
+            <label for="readout-select">Wybierz odczyt:</label>
+            <select id="readout-select"></select>
+            <button id="load-readout-button">Załaduj odczyt</button>
+            <button id="delete-readout-button" class="delete-button">Usuń wybrany odczyt</button>
+        </div>
+
         <div class="chart-grid" id="main-chart-grid">
             <div class="chart-card">
                 <h2>% Wykorzystania Podzespołów</h2>
@@ -47,26 +55,13 @@
                     <canvas id="netConnectionsChart"></canvas>
                 </div>
             </div>
-            <div class="chart-card">
-                <h2>Wykorzystana Pamięć GPU</h2>
-                <div class="chart-container-large">
-                    <canvas id="gpu0memoryUsedChart"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-card">
-                <h2>Temperatura GPU</h2>
-                <div class="chart-container-large">
-                    <canvas id="gpu0temperatureChart"></canvas>
-                </div>
-            </div>
+            
+            <!-- <div id="gpu-chart-container"></div> -->
         </div>
 
         <div class="button-row">
             <button class="back-button" onclick="location.href='/'">Powrót do Monitora</button>
-            <button class="back-button" onclick="location.href='/history'">Pokaż Historię</button>
-            <button class="reset-button" id="reset-stats-button-charts">Resetuj wykresy</button>
-            <button class="reset-button" id="save-readout-button">Zapisz aktualny odczyt</button>
+            <button class="back-button" onclick="location.href='/charts'">Pokaż wykresy Live</button>
         </div>
 
         <div class="footer">
@@ -74,8 +69,6 @@
         </div>
 
     </div>
-
-    <script src="{{ url_for('static', filename='js/charts-script.js') }}"></script>
-    
+    <script src="{{ url_for('static', filename='js/history-charts-script.js') }}"></script>
 </body>
 </html>

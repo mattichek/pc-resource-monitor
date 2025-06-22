@@ -8,16 +8,15 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    
-<div id="alert-bar">
-    <div class="alert-container">
-        <span id="alert-cpu" class="alert-item">CPU: <span class="alert-value">OK</span></span>
-        <span id="alert-ram" class="alert-item">RAM: <span class="alert-value">OK</span></span>
-        <span id="alert-disk" class="alert-item">Dysk: <span class="alert-value">OK</span></span>
-        <span id="alert-gpu" class="alert-item">GPU: <span class="alert-value">OK</span></span>
-        <span id="alert-gpu-temp" class="alert-item">GPU Temp: <span class="alert-value">OK</span></span>
+    <div id="alert-bar">
+        <div class="alert-container">
+            <span id="alert-cpu" class="alert-item">CPU: <span class="alert-value">OK</span></span>
+            <span id="alert-ram" class="alert-item">RAM: <span class="alert-value">OK</span></span>
+            <span id="alert-disk" class="alert-item">Dysk: <span class="alert-value">OK</span></span>
+            <span id="alert-gpu" class="alert-item">GPU: <span class="alert-value">OK</span></span>
+            <span id="alert-gpu-temp" class="alert-item">GPU Temp: <span class="alert-value">OK</span></span>
+        </div>
     </div>
-</div>
 
     <div class="container">
         <h1>Monitor Zasobów Komputera</h1>
@@ -40,7 +39,7 @@
             </div>
             <div class="monitor-item">
                 <span>Taktowanie:</span>
-                <span id="cpu_current_basic_speed">-- GHz</span>
+                <span id="cpu-current-basic-speed">-- GHz</span>
             </div>
             <div class="monitor-item">
                 <span>Cache L2:</span>
@@ -88,7 +87,7 @@
         </div>
 
         <div class="monitor-section">
-            <h2>Dysk</h2>
+            <h2>Dysk Systemowy</h2>
             <div class="monitor-item">
                 <span>Użycie:</span>
                 <span id="disk-usage">--%</span>
@@ -148,8 +147,10 @@
         </div>
 
         <div class="reset-button-container">
+            <button class="back-button" onclick="location.href='/charts'">Pokaż wykresy Live</button>
+            <button class="back-button" onclick="location.href='/history'">Pokaż Historię</button>
             <button class="reset-button" id="reset-stats-button">Resetuj statystyki min/max</button>
-            <button class="reset-button" onclick="location.href='/charts'">Pokaż wykresy</button>
+            <button class="reset-button" id="save-readout-button">Zapisz aktualny odczyt</button>
         </div>
 
         <div class="footer">
