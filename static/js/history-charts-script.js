@@ -1,4 +1,5 @@
 // history-charts-script.js
+const API_URL = '/api/stats';
 const HISTORY_READOUTS_API_URL = '/api/get_historical_readouts';
 const HISTORY_DATA_API_URL = '/api/get_historical_data/'; // Dodamy ID odczytu na końcu
 const DELETE_READOUT_API_URL = '/api/delete_historical_readout/'; // Nowy endpoint do usunięcia odczytu
@@ -427,6 +428,13 @@ function clearAllCharts() {
 
 
 document.addEventListener('DOMContentLoaded', () => {
+
+    setInterval(async () => {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        updateAlerts(data); // Aktualizacja alertów
+    }, 1000); 
+    
     populateReadoutSelect(); // Wypełnij listę odczytów przy ładowaniu strony
 
     const loadButton = document.getElementById('load-readout-button');
@@ -439,3 +447,94 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteButton.addEventListener('click', deleteSelectedReadout);
     }
 });
+
+function updateAlerts(data) {
+    // CPU
+    const cpuAlert = document.getElementById('alert-cpu');
+    const cpuValue = document.querySelector('#alert-cpu .alert-value');
+    cpuValue.textContent = `${data.cpu_usage}%`;
+    
+    if (data.cpu_usage > 90) {
+        cpuAlert.classList.add('alert-danger');
+        cpuAlert.classList.remove('alert-warning');
+    } else if (data.cpu_usage > 70) {
+        cpuAlert.classList.add('alert-warning');
+        cpuAlert.classList.remove('alert-danger');
+    } else {
+        cpuAlert.classList.remove('alert-warning', 'alert-danger');
+    }
+
+    // RAM
+    const ramAlert = document.getElementById('alert-ram');
+    const ramValue = document.querySelector('#alert-ram .alert-value');
+    ramValue.textContent = `${data.ram_usage}%`;
+    
+    if (data.ram_usage > 85) {
+        ramAlert.classList.add('alert-danger');
+        ramAlert.classList.remove('alert-warning');
+    } else if (data.ram_usage > 70) {
+        ramAlert.classList.add('alert-warning');
+        ramAlert.classList.remove('alert-danger');
+    } else {
+        ramAlert.classList.remove('alert-warning', 'alert-danger');
+    }
+
+    // Dysk
+    const diskAlert = document.getElementById('alert-disk');
+    const diskValue = document.querySelector('#alert-disk .alert-value');
+    diskValue.textContent = `${data.disk_usage}%`;
+    
+    if (data.disk_usage > 90) {
+        diskAlert.classList.add('alert-danger');
+        diskAlert.classList.remove('alert-warning');
+    } else if (data.disk_usage > 80) {
+        diskAlert.classList.add('alert-warning');
+        diskAlert.classList.remove('alert-danger');
+    } else {
+        diskAlert.classList.remove('alert-warning', 'alert-danger');
+    }
+
+    // GPU Load
+    const gpuAlert = document.getElementById('alert-gpu');
+    const gpuValue = document.querySelector('#alert-gpu .alert-value');
+    
+    // GPU Temperature
+    const gpuTempAlert = document.getElementById('alert-gpu-temp');
+    const gpuTempValue = document.querySelector('#alert-gpu-temp .alert-value');
+    
+    if (data.gpu_stats && data.gpu_stats.length > 0) {
+        const gpuLoad = data.gpu_stats[0].load;
+        const gpuTemp = data.gpu_stats[0].temperature;
+        
+        // Aktualizacja obciążenia GPU
+        gpuValue.textContent = `${gpuLoad}%`;
+        
+        if (gpuLoad > 90) {
+            gpuAlert.classList.add('alert-danger');
+            gpuAlert.classList.remove('alert-warning');
+        } else if (gpuLoad > 80) {
+            gpuAlert.classList.add('alert-warning');
+            gpuAlert.classList.remove('alert-danger');
+        } else {
+            gpuAlert.classList.remove('alert-warning', 'alert-danger');
+        }
+        
+        // Aktualizacja temperatury GPU
+        gpuTempValue.textContent = `${gpuTemp}°C`;
+        
+        if (gpuTemp > 85) {
+            gpuTempAlert.classList.add('alert-danger');
+            gpuTempAlert.classList.remove('alert-warning');
+        } else if (gpuTemp > 75) {
+            gpuTempAlert.classList.add('alert-warning');
+            gpuTempAlert.classList.remove('alert-danger');
+        } else {
+            gpuTempAlert.classList.remove('alert-warning', 'alert-danger');
+        }
+    } else {
+        gpuValue.textContent = "Brak";
+        gpuAlert.classList.remove('alert-warning', 'alert-danger');
+        gpuTempValue.textContent = "Brak";
+        gpuTempAlert.classList.remove('alert-warning', 'alert-danger');
+    }
+}
