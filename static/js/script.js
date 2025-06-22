@@ -53,6 +53,7 @@ async function fetchStatsAndRender() {
         }
         const data = await response.json();
 
+        updateAlerts(data);
         // CPU
         document.getElementById('processor-name').textContent = data.processor_name;
         document.getElementById('l2-cache').textContent = data.l2_cache;
