@@ -9,6 +9,7 @@ body {
     align-items: flex-start;
     min-height: 100vh;
     box-sizing: border-box;
+    padding-top: 60px;
 }
 
 /* Kontener główny dla wszystkich sekcji */
@@ -393,4 +394,42 @@ canvas {
     .history-controls button {
         width: 100%;
     }
+}
+
+/* Pasek alertów */
+#alert-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: #1A1A22;
+    padding: 10px 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.alert-container {
+    display: flex;
+    justify-content: space-around;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+.alert-item {
+    color: #C0C0C0;
+    font-weight: bold;
+    padding: 5px 15px;
+    border-radius: 4px;
+    background-color: #2D3A47;
+}
+
+.alert-value {
+    color: #38C768;
+}
+
+.alert-warning .alert-value {
+    color: #DDAA00; 
+}
+.alert-danger .alert-value {
+    color: #CC3333; 
 }

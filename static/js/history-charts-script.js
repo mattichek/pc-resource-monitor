@@ -100,17 +100,19 @@ function createOrUpdateChart(chartId, label, unit, borderColor, dataPoints, char
             },
             scales: {
                 x: {
-                    type: 'linear', // Użyj skali liniowej dla indexu danych
+                    // *** ZMIANY TUTAJ ***
+                    display: true, // Zachowaj 'display: true', aby oś istniała
+                    type: 'linear',
                     title: {
-                        display: true,
-                        text: 'Punkt Czasowy'
+                        display: false // Ukryj tytuł osi X
                     },
-                    min: 0, // Zawsze zaczynaj od 0
-                    max: dataPoints.length > 0 ? dataPoints.length - 1 : 1, // Ustaw max na podstawie ilości danych
+                    min: 0,
+                    max: dataPoints.length > 0 ? dataPoints.length - 1 : 1,
                     ticks: {
-                        callback: function(value, index, values) {
-                            return value; // Wyświetlaj numery punktów czasowych
-                        }
+                        display: false // Ukryj etykiety (liczby) na osi X
+                    },
+                    grid: {
+                        display: false // Ukryj linie siatki na osi X
                     }
                 },
                 y: {
