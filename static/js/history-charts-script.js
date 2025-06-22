@@ -22,6 +22,7 @@ async function populateReadoutSelect() {
         const response = await fetch(HISTORY_READOUTS_API_URL);
         const readouts = await response.json();
 
+
         const selectElement = document.getElementById('readout-select');
         selectElement.innerHTML = ''; // Wyczyść istniejące opcje
 
