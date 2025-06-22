@@ -1,90 +1,172 @@
-# Dokumentacja Techniczna: Projektowanie i Implementacja Aplikacji Desktopowej C# WPF z Wykorzystaniem MVVM, Prism i SQLite
+# ZSI Monitor Zasobów Komputera
 
-Niniejsze repozytorium zawiera dokumentację techniczną projektu aplikacji desktopowej, skupiającą się na zaawansowanych aspektach programistycznych w technologii C# WPF. Projekt ten, choć koncepcyjny (ze względu na niedostępność pierwotnego repozytorium GitHub), stanowi kompleksowy przewodnik po najlepszych praktykach i wzorcach architektonicznych niezbędnych do budowy skalowalnych, testowalnych i łatwych w utrzymaniu aplikacji.
+Aplikacja webowa do monitorowania zasobów komputera w czasie rzeczywistym oraz przeglądania danych historycznych. Projekt został zrealizowany z wykorzystaniem frameworka Flask (Python) dla warstwy backendowej oraz HTML, CSS i JavaScript (z Chart.js) dla warstwy front-endowej.
 
-## Cel Projektu
+## Spis treści
 
-Głównym celem projektu jest przedstawienie i analiza kluczowych technologii oraz wzorców projektowych wykorzystywanych w nowoczesnym programowaniu aplikacji desktopowych w C# WPF. Dokumentacja koncentruje się na:
+  - [ZSI Monitor Zasobów Komputera](https://www.google.com/search?q=%23zsi-monitor-zasob%C3%B3w-komputera)
+      - [Spis treści](https://www.google.com/search?q=%23spis-tre%C5%9Bci)
+      - [Opis Projektu](https://www.google.com/search?q=%23opis-projektu)
+      - [Funkcjonalności](https://www.google.com/search?q=%23funkcjonalno%C5%9Bci)
+      - [Technologie](https://www.google.com/search?q=%23technologie)
+      - [Instalacja](https://www.google.com/search?q=%23instalacja)
+          - [Wymagania wstępne](https://www.google.com/search?q=%23wymagania-wst%C4%99pne)
+          - [Klonowanie repozytorium](https://www.google.com/search?q=%23klonowanie-repozytorium)
+          - [Instalacja zależności](https://www.google.com/search?q=%23instalacja-zale%C5%BCno%C5%9Bci)
+          - [Uruchomienie aplikacji](https://www.google.com/search?q=%23uruchomienie-aplikacji)
+      - [Struktura Projektu](https://www.google.com/search?q=%23struktura-projektu)
+      - [Użycie](https://www.google.com/search?q=%23u%C5%BCycie)
+          - [Ekran główny (Monitor)](https://www.google.com/search?q=%23ekran-g%C5%82%C3%B3wny-monitor)
+          - [Wykresy Live](https://www.google.com/search?q=%23wykresy-live)
+          - [Historia](https://www.google.com/search?q=%23historia)
+      - [Potencjał Rozwoju](https://www.google.com/search?q=%23potencja%C5%82-rozwoju)
+      - [Autorzy](https://www.google.com/search?q=%23autorzy)
 
-*   **Programowaniu Obiektowym (OOP):** Fundamentalne zasady, takie jak abstrakcja, hermetyzacja, dziedziczenie i polimorfizm.
-*   **Zasadach SOLID:** Zbiór pięciu zasad projektowania (SRP, OCP, LSP, ISP, DIP), które prowadzą do tworzenia elastycznego i modułowego kodu.
-*   **Architekturze MVVM (Model-View-ViewModel):** Wzorzec architektoniczny zapewniający czystą separację odpowiedzialności między warstwą danych, logiką prezentacji i interfejsem użytkownika.
-*   **Frameworku Prism:** Narzędzie do budowania modułowych i kompozycyjnych aplikacji WPF, wspierające skalowalność i elastyczność.
-*   **Warstwie Dostępu do Danych (DAL) z SQLite:** Implementacja lekkiej, wbudowanej bazy danych do trwałego przechowywania danych.
+## Opis Projektu
 
-## Technologie Wykorzystane w Projekcie
+ZSI Monitor Zasobów Komputera to intuicyjna aplikacja webowa, która umożliwia użytkownikom monitorowanie kluczowych parametrów pracy ich systemu komputerowego. Aplikacja zbiera i wyświetla dane dotyczące zużycia procesora (CPU), pamięci RAM, przestrzeni dyskowej, aktywności sieciowej oraz obciążenia i temperatury karty graficznej (GPU). Dodatkowo, oferuje możliwość zapisywania bieżących odczytów i przeglądania danych historycznych w formie interaktywnych wykresów.
 
-*   **C#:** Główny język programowania.
-*   **WPF (Windows Presentation Foundation):** Framework do tworzenia interfejsów użytkownika aplikacji desktopowych.
-*   **MVVM (Model-View-ViewModel):** Wzorzec architektoniczny dla separacji odpowiedzialności.
-*   **Prism Framework:** Framework do budowania modułowych aplikacji.
-*   **SQLite:** Lekka, wbudowana baza danych.
+Projekt symuluje pełen cykl tworzenia oprogramowania, od idei, przez iteracyjny rozwój w sprintach, po fazy testowania i zbierania feedbacku, co pozwoliło na elastyczne reagowanie na potrzeby i systematyczne rozbudowywanie funkcjonalności.
 
-## Kluczowe Koncepcje Omówione w Dokumentacji
+## Funkcjonalności
 
-### 1. Podstawy Programowania Obiektowego (OOP)
-Dokumentacja szczegółowo omawia cztery filary OOP:
-*   **Abstrakcja:** Ukrywanie złożonych szczegółów implementacyjnych, prezentując tylko istotne cechy.[1]
-*   **Hermetyzacja:** Łączenie danych i metod w jedną jednostkę (klasę), chroniąc wewnętrzny stan obiektu.[1]
-*   **Dziedziczenie:** Mechanizm ponownego użycia kodu, pozwalający klasie potomnej przejmować właściwości i zachowania klasy bazowej.[1]
-*   **Polimorfizm:** Zdolność obiektu do zachowywania się w różny sposób w zależności od kontekstu ("jedna nazwa, wiele form").[1]
+  * **Monitorowanie w czasie rzeczywistym:** Wyświetlanie aktualnych statystyk CPU, RAM, dysku, sieci i GPU.
+  * **Szczegółowe informacje o podzespołach:** Podstawowe dane o procesorze (nazwa, rdzenie, pamięć podręczna) oraz GPU (nazwa, użycie pamięci).
+  * **Wykresy Live:** Dynamiczne wykresy przedstawiające historię zużycia kluczowych zasobów w krótkim okresie.
+  * **Zapisywanie odczytów:** Możliwość zapisania bieżących statystyk do bazy danych SQLite.
+  * **Przeglądanie historii:** Dostęp do zapisanych odczytów historycznych i ich wizualizacja na wykresach.
+  * **Usuwanie danych historycznych:** Funkcjonalność usuwania pojedynczych zapisanych odczytów.
+  * **Alertowanie:** Wizualne alerty informujące o wysokim zużyciu zasobów (CPU, RAM, Dysk, GPU, Temperatura GPU).
+  * **Śledzenie min/max:** Wyświetlanie najniższych i najwyższych wartości dla monitorowanych parametrów.
+  * **Responsywny interfejs:** Dostosowanie wyglądu aplikacji do różnych rozmiarów ekranów.
 
-### 2. Zasady SOLID w Projektowaniu Aplikacji C#
-Zasady SOLID są kluczowe dla tworzenia łatwego w utrzymaniu, elastycznego i skalowalnego oprogramowania [2]:
-*   **SRP (Single Responsibility Principle):** Każda klasa ma tylko jeden powód do zmiany.[2]
-*   **OCP (Open/Closed Principle):** Otwarta na rozszerzenia, zamknięta na modyfikacje.[2]
-*   **LSP (Liskov Substitution Principle):** Obiekty klas pochodnych mogą zastępować obiekty klas bazowych bez zmiany zachowania programu.[2]
-*   **ISP (Interface Segregation Principle):** Klienci nie są zmuszani do implementowania interfejsów, których nie używają.[2]
-*   **DIP (Dependency Inversion Principle):** Moduły wysokopoziomowe i niskopoziomowe zależą od abstrakcji.[2]
+## Technologie
 
-### 3. Architektura Model-View-ViewModel (MVVM) w WPF
-MVVM promuje silną separację odpowiedzialności, zwiększając testowalność i ułatwiając współpracę [3]:
-*   **Model:** Reprezentuje dane aplikacji i logikę biznesową.[3]
-*   **View:** Interfejs użytkownika, odpowiedzialny za wyświetlanie danych i przechwytywanie danych wejściowych.[3]
-*   **ViewModel:** Pośrednik między View a Modelem, udostępniający dane i logikę specyficzną dla UI.[3]
-*   **Powiązanie Danych (Data Binding) i `INotifyPropertyChanged`:** Automatyczna synchronizacja danych między UI a ViewModel, kluczowa dla aktualizacji interfejsu.[3]
-*   **Komendy (Commands):** Oddzielenie wywołującego akcję od logiki obsługującej tę akcję, ułatwiające zarządzanie interakcjami użytkownika.[4]
+  * **Backend:**
+      * **Python 3.x:** Główny język programowania.
+      * **Flask:** Lekki framework webowy Pythona do budowy API i serwowania stron.
+      * **`psutil`:** Biblioteka do uzyskiwania informacji o procesach i wykorzystaniu systemu (CPU, RAM, dysk, sieć).
+      * **`GPUtil`:** Biblioteka do monitorowania statystyk GPU (wspiera NVIDIA).
+      * **`cpuinfo`:** Biblioteka do pobierania szczegółowych informacji o procesorze.
+      * **`sqlite3`:** Moduł Pythona do interakcji z bazą danych SQLite.
+      * **`threading`:** Do zbierania statystyk w tle.
+      * **`logging`:** Do zarządzania logami aplikacji.
+  * **Frontend:**
+      * **HTML5:** Struktura strony.
+      * **CSS3:** Stylizacja interfejsu (plik `style.css`).
+      * **JavaScript (Vanilla JS):** Interaktywność i pobieranie danych z API.
+      * **Chart.js:** Biblioteka do generowania dynamicznych i interaktywnych wykresów.
+  * **Zarządzanie projektem:**
+      * **Jira Software:** Do śledzenia zadań, błędów i postępów w projekcie.
+      * **Git:** System kontroli wersji.
 
-### 4. Framework Prism dla Aplikacji WPF
-Prism ułatwia budowanie modułowych, kompozycyjnych aplikacji [5]:
-*   **Koncepcja Modułowości:** Dzielenie aplikacji na niezależne, luźno sprzężone moduły.[5]
-*   **Proces Ładowania Modułów:** Rejestracja, ładowanie i inicjalizacja modułów za pomocą `ModuleCatalog` i `ModuleManager`.[5]
-*   **Komunikacja Między Modułami:** Wzorce takie jak zdarzenia luźno sprzężone i usługi współdzielone.[5]
-*   **Regiony i Kompozycja UI:** Dynamiczne dodawanie widoków do predefiniowanych obszarów interfejsu użytkownika.[6]
-*   **Wstrzykiwanie Zależności (DI) i Kontenery IoC (Unity/MEF):** Promowanie luźnego sprzężenia i elastyczności.[5]
+## Instalacja
 
-### 5. Warstwa Dostępu do Danych (DAL) z SQLite
-DAL zapewnia abstrakcję nad szczegółami bazy danych [7]:
-*   **Zarządzanie Połączeniami:** Elastyczne konfigurowanie i automatyczne zarządzanie połączeniami z bazą danych SQLite.[7]
-*   **Wykonywanie Zapytań:** Metody do wykonywania instrukcji DDL, DML i zapytań `SELECT` (`ExecuteNonQuery`, `ExecuteScalar`, `ExecuteDataTable`, `ExecuteDataSet`, `ExecuteAndFillList<T>`, `ExecuteAndFill<T>`).[7]
-*   **Obsługa Błędów:** Mechanizmy sprawdzania i obsługi błędów operacji bazodanowych.[7]
+Poniższe instrukcje pomogą w uruchomieniu aplikacji na lokalnej maszynie.
 
-## Struktura Repozytorium (Koncepcyjna)
+### Wymagania wstępne
 
-Chociaż to repozytorium nie zawiera kodu źródłowego aplikacji, jego struktura odzwierciedlałaby typowy projekt C# WPF z wykorzystaniem omawianych technologii:
-.
-├── Documentation/
-│   └── TechnicalDocumentation.pdf  # Skompilowana dokumentacja LaTeX
-│   └── TechnicalDocumentation.tex  # Plik źródłowy LaTeX
-├── src/
-│   ├── YourProject.Core/           # Moduł zawierający wspólne interfejsy, modele, usługi
-│   ├── YourProject.Modules.ModuleA/ # Przykład modułu A (View, ViewModel, logika modułu)
-│   ├── YourProject.Modules.ModuleB/ # Przykład modułu B
-│   ├── YourProject.UI.Shell/       # Główna aplikacja (Shell), definiująca regiony
-│   └── YourProject.Data/           # Warstwa dostępu do danych (DAL) z implementacją SQLite
-├── media/                          # Zasoby graficzne dla dokumentacji
-├──.gitignore
-└── README.md
+Upewnij się, że masz zainstalowane następujące oprogramowanie:
 
-## Uruchamianie Projektu (Koncepcyjnie)
+  * Python 3.x
+  * pip (menedżer pakietów Pythona)
 
-Ponieważ jest to dokumentacja koncepcyjna, nie ma bezpośrednich kroków do uruchomienia kodu. Jednakże, typowy proces dla takiej aplikacji obejmowałby:
+### Klonowanie repozytorium
 
-1.  **Skompilowanie projektu:** Użycie Visual Studio do zbudowania wszystkich modułów i głównej aplikacji.
-2.  **Konfiguracja bazy danych:** Upewnienie się, że plik bazy danych SQLite jest dostępny w odpowiedniej lokalizacji (zazwyczaj w folderze aplikacji lub danych użytkownika).
-3.  **Uruchomienie aplikacji:** Uruchomienie skompilowanego pliku `.exe` głównej aplikacji (Shell).
+```bash
+git clone https://github.com/TwojaNazwaUzytkownika/ZSI-Monitor-Zasobow-Komputera.git
+cd ZSI-Monitor-Zasobow-Komputera
+```
+
+### Instalacja zależności
+
+Utwórz wirtualne środowisko (zalecane) i zainstaluj niezbędne pakiety:
+
+```bash
+python -m venv venv
+# Aktywuj wirtualne środowisko:
+# Na Windowsie:
+.\venv\Scripts\activate
+# Na macOS/Linux:
+source venv/bin/activate
+
+pip install -r requirements.txt
+```
+
+**Uwaga:** Plik `requirements.txt` powinien zawierać:
+
+```
+Flask
+psutil
+GPUtil
+cpuinfo
+Flask-Cors
+```
+
+### Uruchomienie aplikacji
+
+Po zainstalowaniu zależności, możesz uruchomić aplikację:
+
+```bash
+python app.py
+```
+
+Aplikacja będzie dostępna pod adresem: `http://127.0.0.1:5000/`
+
+## Struktura Projektu
+
+```
+ZSI-Monitor-Zasobow-Komputera/
+├── app.py                      # Główny plik aplikacji Flask
+├── monitor.py                  # Moduł do zbierania statystyk systemowych
+├── monitor_history.db          # Baza danych SQLite (generowana automatycznie przy pierwszym uruchomieniu)
+├── static/
+│   ├── css/
+│   │   └── style.css           # Plik stylów CSS
+│   └── js/
+│       ├── charts-script.js    # Skrypty JS dla strony wykresów live
+│       ├── history-charts-script.js # Skrypty JS dla strony historii
+│       └── script.js           # Skrypty JS dla strony głównej monitora
+└── templates/
+    ├── charts.html             # Strona z wykresami live
+    ├── history.html            # Strona z historią odczytów
+    └── index.html              # Strona główna monitora
+```
+
+## Użycie
+
+### Ekran główny (Monitor)
+
+Po uruchomieniu aplikacji, otworzy się strona główna (`index.html`), gdzie zobaczysz aktualne statystyki zasobów. Na tej stronie dostępne są również przyciski do:
+
+  * `Pokaż wykresy Live`: Przenosi do strony z dynamicznymi wykresami.
+  * `Pokaż Historię`: Przenosi do strony z zapisanymi odczytami historycznymi.
+  * `Resetuj statystyki min/max`: Resetuje wyświetlane wartości minimalne i maksymalne.
+  * `Zapisz aktualny odczyt`: Zapisuje bieżący zestaw statystyk do bazy danych.
+
+### Wykresy Live
+
+Strona `charts.html` (`/charts`) prezentuje wykresy w czasie rzeczywistym dla najważniejszych parametrów, takich jak zużycie CPU, RAM, GPU oraz ruch sieciowy. Wykresy są aktualizowane na bieżąco, oferując dynamiczną wizualizację.
+
+### Historia
+
+Strona `history.html` (`/history`) pozwala na przeglądanie zapisanych odczytów. Możesz wybrać konkretny odczyt z listy i zobaczyć jego szczegółowe dane na wykresach. Istnieje również możliwość usunięcia wybranego odczytu.
+
+## Potencjał Rozwoju
+
+Projekt ma duży potencjał do dalszego rozwoju, w tym:
+
+  * **Alerty i powiadomienia:** Implementacja progów zużycia zasobów i wysyłanie powiadomień (np. e-mail, push).
+  * **Konfigurowalne interwały:** Możliwość zmiany częstotliwości odświeżania danych przez użytkownika.
+  * **Monitorowanie procesów:** Dodanie listy aktywnych procesów i ich zużycia zasobów.
+  * **Autoryzacja użytkowników:** Wprowadzenie systemu logowania i zarządzania użytkownikami dla środowisk wielodostępnych.
+  * **Rozbudowane bazy danych:** Migracja z SQLite na bardziej skalowalną bazę danych (np. PostgreSQL, MySQL) dla dużych ilości danych historycznych.
+  * **Dokumentacja:** Stworzenie bardziej szczegółowej dokumentacji technicznej i użytkowej.
+  * **Skaner kodów:** Chociaż nie jest bezpośrednio związane z obecną funkcjonalnością monitorowania, sugestia "skaner kodu QR" z wniosków wskazuje na potencjalne rozszerzenie aplikacji o obsługę kodów kreskowych/QR do identyfikacji monitorowanych urządzeń lub zasobów fizycznych.
 
 ## Autorzy
 
-*   Mateusz Zaskórski
-*   Jakub Kwaśniewski
+  * Mateusz Zaskórski
+  * Jakub Kwaśniewski
+  * Patryk Hałacz
+  * Patryk Foja
