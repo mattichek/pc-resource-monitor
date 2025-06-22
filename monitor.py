@@ -25,8 +25,8 @@ def get_system_stats():
     try:
         info = cpuinfo.get_cpu_info()
         processor_name = info.get('brand_raw', 'N/A')
-        l2_cache = info.get('l2_cache_size', 'N/A')
-        l3_cache = info.get('l3_cache_size', 'N/A')
+        l2_cache =  info.get('l2_cache_size', 'N/A')/pow(1024, 2)
+        l3_cache = info.get('l3_cache_size', 'N/A')/pow(1024, 2)
         cores_physical = psutil.cpu_count(logical=False)
         cores_logical = psutil.cpu_count(logical=True)
     except Exception:

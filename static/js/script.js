@@ -56,8 +56,8 @@ async function fetchStatsAndRender() {
         updateAlerts(data);
         // CPU
         document.getElementById('processor-name').textContent = data.processor_name;
-        document.getElementById('l2-cache').textContent = data.l2_cache;
-        document.getElementById('l3-cache').textContent = data.l3_cache;
+        document.getElementById('l2-cache').textContent = data.l2_cache + ' MB';
+        document.getElementById('l3-cache').textContent = data.l3_cache + ' MB';
         document.getElementById('cores-physical').textContent = data.cores_physical;
         document.getElementById('cores-logical').textContent = data.cores_logical;
 
