@@ -36,7 +36,7 @@ Projekt symuluje pełen cykl tworzenia oprogramowania, od idei, przez iteracyjny
   * **Zapisywanie odczytów:** Możliwość zapisania bieżących statystyk do bazy danych SQLite.
   * **Przeglądanie historii:** Dostęp do zapisanych odczytów historycznych i ich wizualizacja na wykresach.
   * **Usuwanie danych historycznych:** Funkcjonalność usuwania pojedynczych zapisanych odczytów.
-  * **Alertowanie:** Wizualne alerty informujące o wysokim zużyciu zasobów (CPU, RAM, Dysk, GPU, Temperatura GPU).
+  * **Alertowanie:** Wizualne alerty informujące o wysokim zużyciu zasobów (CPU, RAM, Dysk, GPU).
   * **Śledzenie min/max:** Wyświetlanie najniższych i najwyższych wartości dla monitorowanych parametrów.
   * **Responsywny interfejs:** Dostosowanie wyglądu aplikacji do różnych rozmiarów ekranów.
 
@@ -74,8 +74,7 @@ Upewnij się, że masz zainstalowane następujące oprogramowanie:
 ### Klonowanie repozytorium
 
 ```bash
-git clone https://github.com/TwojaNazwaUzytkownika/ZSI-Monitor-Zasobow-Komputera.git
-cd ZSI-Monitor-Zasobow-Komputera
+git clone https://github.com/mattichek/pc-resource-monitor
 ```
 
 ### Instalacja zależności
@@ -157,12 +156,10 @@ Strona `history.html` (`/history`) pozwala na przeglądanie zapisanych odczytów
 Projekt ma duży potencjał do dalszego rozwoju, w tym:
 
   * **Alerty i powiadomienia:** Implementacja progów zużycia zasobów i wysyłanie powiadomień (np. e-mail, push).
-  * **Konfigurowalne interwały:** Możliwość zmiany częstotliwości odświeżania danych przez użytkownika.
   * **Monitorowanie procesów:** Dodanie listy aktywnych procesów i ich zużycia zasobów.
   * **Autoryzacja użytkowników:** Wprowadzenie systemu logowania i zarządzania użytkownikami dla środowisk wielodostępnych.
   * **Rozbudowane bazy danych:** Migracja z SQLite na bardziej skalowalną bazę danych (np. PostgreSQL, MySQL) dla dużych ilości danych historycznych.
-  * **Dokumentacja:** Stworzenie bardziej szczegółowej dokumentacji technicznej i użytkowej.
-  * **Skaner kodów:** Chociaż nie jest bezpośrednio związane z obecną funkcjonalnością monitorowania, sugestia "skaner kodu QR" z wniosków wskazuje na potencjalne rozszerzenie aplikacji o obsługę kodów kreskowych/QR do identyfikacji monitorowanych urządzeń lub zasobów fizycznych.
+
 
 ## Autorzy
 
